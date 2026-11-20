@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 
 import redis
 from django.conf import settings
@@ -29,10 +30,15 @@ def _database_ok() -> bool:
         return False
 
 
+@lru_cache(maxsize=1)
+def _redis_client() -> redis.Redis:
+    """One pooled client per process: the health probe must not open a connection per call."""
+    return redis.Redis.from_url(settings.REDIS_URL, socket_timeout=1, socket_connect_timeout=1)
+
+
 def _cache_ok() -> bool:
     try:
-        client = redis.Redis.from_url(settings.REDIS_URL, socket_timeout=0.5)
-        return bool(client.ping())
+        return bool(_redis_client().ping())
     except redis.RedisError:
         return False
 
