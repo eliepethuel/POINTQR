@@ -1,0 +1,123 @@
+<pq-page-header
+  title="Sites"
+  eyebrow="Organisation"
+  subtitle="Position et rayon de géorepérage de chaque lieu de pointage."
+>
+  @if (canEdit()) {
+    <button type="button" class="pq-btn pq-btn-primary" (click)="startCreate()">
+      Nouveau site
+    </button>
+  }
+</pq-page-header>
+
+<div class="layout">
+  <div class="list">
+    @if (draft(); as d) {
+      <form class="pq-card form pq-pop-in" (ngSubmit)="save()">
+        <h2>{{ d.id ? 'Modifier le site' : 'Nouveau site' }}</h2>
+        <label class="pq-field"
+          ><span class="pq-label">Nom</span>
+          <input
+            class="pq-input"
+            name="name"
+            required
+            [ngModel]="d.name"
+            (ngModelChange)="patch({ name: $event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Adresse</span>
+          <input
+            class="pq-input"
+            name="address"
+            [ngModel]="d.address"
+            (ngModelChange)="patch({ address: $event })"
+        /></label>
+        <div class="pq-grid-2">
+          <label class="pq-field"
+            ><span class="pq-label">Latitude</span>
+            <input
+              class="pq-input pq-mono"
+              type="number"
+              step="0.000001"
+              name="lat"
+              [ngModel]="d.latitude"
+              (ngModelChange)="patch({ latitude: +$event })"
+          /></label>
+          <label class="pq-field"
+            ><span class="pq-label">Longitude</span>
+            <input
+              class="pq-input pq-mono"
+              type="number"
+              step="0.000001"
+              name="lng"
+              [ngModel]="d.longitude"
+              (ngModelChange)="patch({ longitude: +$event })"
+          /></label>
+        </div>
+        <p class="pq-hint">Astuce : cliquez sur la carte pour placer le site.</p>
+        <label class="pq-field">
+          <span class="pq-label"
+            >Rayon de géorepérage : <strong class="pq-mono">{{ d.radius_m }} m</strong></span
+          >
+          <input
+            type="range"
+            min="20"
+            max="1000"
+            step="10"
+            name="radius"
+            [ngModel]="d.radius_m"
+            (ngModelChange)="patch({ radius_m: +$event })"
+            aria-describedby="radius-hint"
+          />
+          <span id="radius-hint" class="pq-hint"
+            >150 m par défaut ; élargissez pour les bâtiments où le GPS est imprécis.</span
+          >
+        </label>
+        <label class="pq-field"
+          ><span class="pq-label">Wi-Fi autorisés (optionnel)</span>
+          <input
+            class="pq-input"
+            name="wifi"
+            placeholder="MINISTERE-WIFI, MINISTERE-INVITES"
+            [ngModel]="d.wifi"
+            (ngModelChange)="patch({ wifi: $event })"
+        /></label>
+        <div class="actions">
+          <button type="submit" class="pq-btn pq-btn-primary" [disabled]="saving() || !d.name">
+            Enregistrer
+          </button>
+          <button type="button" class="pq-btn pq-btn-ghost" (click)="draft.set(null)">
+            Annuler
+          </button>
+        </div>
+      </form>
+    }
+
+    @for (site of sites.value()?.results ?? []; track site.id; let i = $index) {
+      <article class="pq-card site" pqRevealOnScroll [revealIndex]="i">
+        <div>
+          <h3>{{ site.name }}</h3>
+          <p class="muted">{{ site.address || 'Adresse non renseignée' }}</p>
+          <p class="meta">
+            <span class="pq-badge pq-badge-accent pq-mono">{{ site.radius_m }} m</span>
+            <span class="pq-badge">{{ site.agent_count ?? 0 }} agents</span>
+          </p>
+        </div>
+        @if (canEdit()) {
+          <button type="button" class="pq-btn pq-btn-sm" (click)="startEdit(site)">Modifier</button>
+        }
+      </article>
+    } @empty {
+      @if (!draft()) {
+        <pq-empty-state
+          title="Aucun site"
+          message="Ajoutez le premier lieu de pointage de l'entreprise."
+        />
+      }
+    }
+  </div>
+
+  <div class="map-wrap">
+    <pq-site-map [sites]="mapSites()" [selectedId]="selectedId()" (picked)="onPicked($event)" />
+  </div>
+</div>

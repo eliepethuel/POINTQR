@@ -1,8 +1,39 @@
-from django.urls import include, path
+from django.urls import URLPattern, URLResolver, include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
 
-api_v1 = [
+from apps.accounts import views as accounts
+from apps.organization import views as organization
+from apps.tenancy import views as tenancy
+
+router = DefaultRouter(trailing_slash=True)
+router.register("users", accounts.UserViewSet, basename="user")
+router.register("sites", organization.SiteViewSet, basename="site")
+router.register("org-units", organization.OrgUnitViewSet, basename="org-unit")
+router.register("agents", organization.AgentViewSet, basename="agent")
+router.register("devices", organization.DeviceViewSet, basename="device")
+router.register(
+    "device-requests", organization.DeviceChangeRequestViewSet, basename="device-request"
+)
+router.register("platform/companies", tenancy.CompanyViewSet, basename="platform-company")
+router.register(
+    "platform/subscriptions", tenancy.SubscriptionViewSet, basename="platform-subscription"
+)
+
+auth_urls = [
+    path("login/", accounts.LoginView.as_view(), name="login"),
+    path("mfa/verify/", accounts.MfaVerifyView.as_view(), name="mfa-verify"),
+    path("refresh/", accounts.RefreshView.as_view(), name="refresh"),
+    path("logout/", accounts.LogoutView.as_view(), name="logout"),
+    path("me/", accounts.MeView.as_view(), name="me"),
+]
+
+api_v1: list[URLPattern | URLResolver] = [
     path("", include("apps.system.urls")),
+    path("auth/", include((auth_urls, "auth"))),
+    path("settings/company/", tenancy.CompanySettingsView.as_view(), name="company-settings"),
+    path("platform/stats/", tenancy.PlatformStatsView.as_view(), name="platform-stats"),
+    path("", include(router.urls)),
 ]
 
 urlpatterns = [

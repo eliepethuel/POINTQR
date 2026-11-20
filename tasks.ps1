@@ -5,6 +5,7 @@
   Prerequisites: uv, Node 24+, PostgreSQL 16, Garnet (Redis protocol).
     env       create .env with random secrets
     db-init   create database and roles (asks for the PostgreSQL superuser password)
+    db-reset  development only: drop and recreate the schema
     install   install backend and frontend dependencies
     migrate   apply database migrations (owner role)
     dev       start Garnet, API, Celery worker + beat and Angular, each in its own window
@@ -18,7 +19,7 @@
 #>
 param(
   [Parameter(Position = 0)]
-  [ValidateSet('env', 'db-init', 'install', 'migrate', 'dev', 'api', 'worker', 'beat', 'front',
+  [ValidateSet('env', 'db-init', 'db-reset', 'install', 'migrate', 'dev', 'api', 'worker', 'beat', 'front',
     'redis', 'shell', 'seed', 'test', 'test-back', 'test-front', 'lint', 'lint-back', 'lint-front',
     'format', 'openapi', 'client', 'e2e', 'help')]
   [string]$Target = 'help'
@@ -30,6 +31,8 @@ $Frontend = Join-Path $Root 'frontend'
 
 function Invoke-Checked([string]$Dir, [scriptblock]$Block) {
   Push-Location $Dir
+  # Native tools write warnings to stderr: never turn them into terminating errors.
+  $ErrorActionPreference = 'Continue'
   try {
     & $Block
     if ($LASTEXITCODE -ne 0) { throw "Command failed with exit code $LASTEXITCODE" }
@@ -89,6 +92,25 @@ function Initialize-Database {
   Write-Host 'Database and roles ready.'
 }
 
+function Reset-Database {
+  # Development only: drops every table, then migrations rebuild the schema (owner role, no superuser).
+  $cfg = Read-DotEnv
+  $psql = Find-Psql
+  $env:PGPASSWORD = $cfg.POSTGRES_OWNER_PASSWORD
+  try {
+    $sql = @"
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+GRANT USAGE ON SCHEMA public TO "$($cfg.APP_DB_USER)";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "$($cfg.APP_DB_USER)";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO "$($cfg.APP_DB_USER)";
+"@
+    $sql | & $psql -h $cfg.POSTGRES_HOST -p $cfg.POSTGRES_PORT -U $cfg.POSTGRES_OWNER_USER -d $cfg.POSTGRES_DB -v ON_ERROR_STOP=1 -q
+    if ($LASTEXITCODE -ne 0) { throw 'Database reset failed.' }
+  } finally { Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue }
+  Write-Host 'Schema dropped and recreated. Run: .\tasks.ps1 migrate'
+}
+
 # Runs a backend command with the owner role (migrations, tests create/alter tables).
 function Invoke-BackendAsOwner([string[]]$Arguments, [string]$Settings = 'config.settings.dev') {
   $cfg = Read-DotEnv
@@ -113,6 +135,7 @@ function Start-Garnet {
 switch ($Target) {
   'env'        { Initialize-Env }
   'db-init'    { Initialize-Database }
+  'db-reset'   { Reset-Database }
   'install'    {
     Invoke-Checked $Backend { uv sync --frozen }
     Invoke-Checked $Frontend { npm ci --no-audit --no-fund }

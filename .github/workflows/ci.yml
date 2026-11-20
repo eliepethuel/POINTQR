@@ -19,22 +19,32 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: pointqr
-          POSTGRES_USER: pointqr
-          POSTGRES_PASSWORD: pointqr
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U pointqr" --health-interval 5s --health-retries 10
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 10
       redis:
         image: redis:7-alpine
         ports: ["6379:6379"]
     env:
       DJANGO_SETTINGS_MODULE: config.settings.test
       DJANGO_SECRET_KEY: ci-only-secret-key
-      DATABASE_URL: postgres://pointqr:pointqr@localhost:5432/pointqr
+      # Tests run as the non-superuser owner role so row level security is really enforced.
+      DATABASE_URL: postgres://pointqr_owner:owner-ci@localhost:5432/pointqr
       REDIS_URL: redis://localhost:6379/0
+      FIELD_ENCRYPTION_KEY: 3q2-7wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     steps:
       - uses: actions/checkout@v5
+      - name: Create database roles (same script as local db-init)
+        working-directory: .
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql -h localhost -U postgres -d postgres -v db=pointqr
+          -v owner_user=pointqr_owner -v owner_password=owner-ci
+          -v app_user=pointqr_app -v app_password=app-ci -f infra/postgres/create-roles.sql
       - uses: astral-sh/setup-uv@v7
         with:
           version: "0.10.7"

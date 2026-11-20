@@ -1,0 +1,93 @@
+<main class="login pq-grain">
+  <div class="pq-aurora" aria-hidden="true"></div>
+
+  <section class="card pq-glass pq-pop-in" [class.pq-shake]="shake()" aria-labelledby="login-title">
+    <a class="brand" href="/">Point<span>QR</span></a>
+
+    @switch (step()?.kind) {
+      @case ('mfa_required') {
+        <h1 id="login-title">Vérification en deux étapes</h1>
+        <p class="lead">Saisissez le code à 6 chiffres de votre application d'authentification.</p>
+        <pq-otp-input [disabled]="busy()" [shake]="shake()" (completed)="verify($event)" />
+        <button type="button" class="pq-btn pq-btn-ghost link" (click)="back()">
+          Changer de compte
+        </button>
+      }
+      @case ('mfa_setup') {
+        <h1 id="login-title">Activez la double authentification</h1>
+        <p class="lead">
+          Obligatoire pour les administrateurs et le service RH. Scannez ce code avec Google
+          Authenticator, Microsoft Authenticator ou FreeOTP, puis saisissez le code affiché.
+        </p>
+        @if (qrDataUrl(); as qr) {
+          <img
+            class="qr"
+            [src]="qr"
+            width="220"
+            height="220"
+            alt="QR code d'enrôlement de l'authentificateur"
+          />
+        }
+        @if (step(); as s) {
+          @if (s.kind === 'mfa_setup') {
+            <p class="secret">
+              Clé manuelle : <code class="pq-mono">{{ s.secret }}</code>
+            </p>
+          }
+        }
+        <pq-otp-input [disabled]="busy()" [shake]="shake()" (completed)="verify($event)" />
+        <button type="button" class="pq-btn pq-btn-ghost link" (click)="back()">Retour</button>
+      }
+      @default {
+        <h1 id="login-title">Connexion</h1>
+        <p class="lead">Le pointage qui ne ment pas.</p>
+        <form class="form" (ngSubmit)="submit()" #form="ngForm">
+          <label class="pq-field">
+            <span class="pq-label">Code entreprise</span>
+            <input
+              class="pq-input glow"
+              name="companyCode"
+              [(ngModel)]="companyCode"
+              autocomplete="organization"
+              placeholder="ex. MINX (vide pour l'équipe PointQR)"
+              maxlength="12"
+            />
+          </label>
+          <label class="pq-field">
+            <span class="pq-label">Identifiant</span>
+            <input
+              class="pq-input glow"
+              name="username"
+              [(ngModel)]="username"
+              autocomplete="username"
+              required
+            />
+          </label>
+          <label class="pq-field">
+            <span class="pq-label">Mot de passe</span>
+            <input
+              class="pq-input glow"
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+          <button
+            class="pq-btn pq-btn-highlight submit"
+            type="submit"
+            pqMagnetic
+            [disabled]="busy() || !form.valid"
+          >
+            {{ busy() ? 'Connexion…' : 'Se connecter' }}
+          </button>
+        </form>
+      }
+    }
+
+    @if (error(); as message) {
+      <p class="pq-error-text" role="alert">{{ message }}</p>
+    }
+  </section>
+</main>
