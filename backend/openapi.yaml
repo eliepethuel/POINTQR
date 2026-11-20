@@ -427,6 +427,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/CheckIn'
           description: ''
+  /api/v1/dashboard/today/:
+    get:
+      operationId: dashboard_today
+      description: Today at a glance, for the whole company or the manager's teams
+        (EF-25).
+      tags:
+      - dashboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/device-requests/:
     get:
       operationId: device_requests_list
@@ -594,6 +611,172 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/v1/holidays/:
+    get:
+      operationId: holidays_list
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - holidays
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHolidayList'
+          description: ''
+    post:
+      operationId: holidays_create
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      tags:
+      - holidays
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+  /api/v1/holidays/{id}/:
+    get:
+      operationId: holidays_retrieve
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) jour férié.
+        required: true
+      tags:
+      - holidays
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+    put:
+      operationId: holidays_update
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) jour férié.
+        required: true
+      tags:
+      - holidays
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+    patch:
+      operationId: holidays_partial_update
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) jour férié.
+        required: true
+      tags:
+      - holidays
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHolidayRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+    delete:
+      operationId: holidays_destroy
+      description: National holidays (read-only, shared) plus the company's own days
+        (EF-15).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) jour férié.
+        required: true
+      tags:
+      - holidays
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/kiosk/checkins/:
     post:
       operationId: kiosk_checkin
@@ -892,6 +1075,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/MobileStatus'
           description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: notifications_list
+      description: The current user's notifications.
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/v1/notifications/mark-read/:
+    post:
+      operationId: notifications_mark_read
+      description: The current user's notifications.
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkReadRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/org-units/:
     get:
       operationId: org_units_list
@@ -1070,6 +1309,122 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OrgTreeNode'
+          description: ''
+  /api/v1/periods/:
+    get:
+      operationId: periods_list
+      description: Monthly closing for payroll; reopening is traced in the audit log
+        (RG-14).
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - periods
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPeriodList'
+          description: ''
+    post:
+      operationId: periods_create
+      description: Monthly closing for payroll; reopening is traced in the audit log
+        (RG-14).
+      tags:
+      - periods
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Period'
+          description: ''
+  /api/v1/periods/{id}/close/:
+    post:
+      operationId: periods_close
+      description: Monthly closing for payroll; reopening is traced in the audit log
+        (RG-14).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) période.
+        required: true
+      tags:
+      - periods
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Period'
+          description: ''
+  /api/v1/periods/{id}/reopen/:
+    post:
+      operationId: periods_reopen
+      description: Monthly closing for payroll; reopening is traced in the audit log
+        (RG-14).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) période.
+        required: true
+      tags:
+      - periods
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReopenRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Period'
           description: ''
   /api/v1/platform/companies/:
     get:
@@ -1415,6 +1770,456 @@ paths:
         required: true
       tags:
       - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/schedule-assignments/:
+    get:
+      operationId: schedule_assignments_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - schedule-assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssignmentList'
+          description: ''
+    post:
+      operationId: schedule_assignments_create
+      tags:
+      - schedule-assignments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/v1/schedule-assignments/{id}/:
+    get:
+      operationId: schedule_assignments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) affectation d'horaire.
+        required: true
+      tags:
+      - schedule-assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+    put:
+      operationId: schedule_assignments_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) affectation d'horaire.
+        required: true
+      tags:
+      - schedule-assignments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+    patch:
+      operationId: schedule_assignments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) affectation d'horaire.
+        required: true
+      tags:
+      - schedule-assignments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssignmentRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+    delete:
+      operationId: schedule_assignments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) affectation d'horaire.
+        required: true
+      tags:
+      - schedule-assignments
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/schedule-exceptions/:
+    get:
+      operationId: schedule_exceptions_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - schedule-exceptions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedExceptionList'
+          description: ''
+    post:
+      operationId: schedule_exceptions_create
+      tags:
+      - schedule-exceptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExceptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+          description: ''
+  /api/v1/schedule-exceptions/{id}/:
+    get:
+      operationId: schedule_exceptions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire d'exception.
+        required: true
+      tags:
+      - schedule-exceptions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+          description: ''
+    put:
+      operationId: schedule_exceptions_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire d'exception.
+        required: true
+      tags:
+      - schedule-exceptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExceptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+          description: ''
+    patch:
+      operationId: schedule_exceptions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire d'exception.
+        required: true
+      tags:
+      - schedule-exceptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedExceptionRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+          description: ''
+    delete:
+      operationId: schedule_exceptions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire d'exception.
+        required: true
+      tags:
+      - schedule-exceptions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/schedules/:
+    get:
+      operationId: schedules_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - schedules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedScheduleList'
+          description: ''
+    post:
+      operationId: schedules_create
+      tags:
+      - schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+  /api/v1/schedules/{id}/:
+    get:
+      operationId: schedules_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire.
+        required: true
+      tags:
+      - schedules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+    put:
+      operationId: schedules_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire.
+        required: true
+      tags:
+      - schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+    patch:
+      operationId: schedules_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire.
+        required: true
+      tags:
+      - schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+    delete:
+      operationId: schedules_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) horaire.
+        required: true
+      tags:
+      - schedules
       security:
       - jwtAuth: []
       responses:
@@ -1770,6 +2575,109 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+  /api/v1/workdays/:
+    get:
+      operationId: workdays_list
+      parameters:
+      - in: query
+        name: agent
+        schema:
+          type: string
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: unit
+        schema:
+          type: string
+      tags:
+      - workdays
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkDayList'
+          description: ''
+  /api/v1/workdays/recompute/:
+    post:
+      operationId: workdays_recompute
+      tags:
+      - workdays
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecomputeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/workdays/summary/:
+    get:
+      operationId: workdays_summary
+      description: Cumulative lateness, absences and hours (agent file, EF-26).
+      parameters:
+      - in: query
+        name: agent
+        schema:
+          type: string
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: unit
+        schema:
+          type: string
+      tags:
+      - workdays
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkDaySummary'
+          description: ''
 components:
   schemas:
     ActivateRequestRequest:
@@ -1929,6 +2837,51 @@ components:
       description: |-
         * `active` - Actif
         * `inactive` - Inactif
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+        schedule:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - agent
+      - end_date
+      - id
+      - schedule
+      - start_date
+    AssignmentRequest:
+      type: object
+      properties:
+        agent:
+          type: string
+          format: uuid
+        schedule:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - agent
+      - end_date
+      - schedule
+      - start_date
     AuthResponse:
       type: object
       description: Either tokens (step=authenticated) or an MFA challenge.
@@ -2549,6 +3502,64 @@ components:
         * `out` - Sortie
         * `break_out` - Début de pause
         * `break_in` - Fin de pause
+    Exception:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Libellé
+          maxLength: 120
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        schedule:
+          type: string
+          format: uuid
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          description: Vide = toute l'entreprise.
+      required:
+      - end_date
+      - id
+      - name
+      - schedule
+      - start_date
+    ExceptionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Libellé
+          maxLength: 120
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        schedule:
+          type: string
+          format: uuid
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          description: Vide = toute l'entreprise.
+      required:
+      - end_date
+      - name
+      - schedule
+      - start_date
     Health:
       type: object
       properties:
@@ -2611,6 +3622,57 @@ components:
       - epoch_ms
       - key_version
       - status
+    Holiday:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        date:
+          type: string
+          format: date
+        label:
+          type: string
+          title: Libellé
+          maxLength: 120
+        country:
+          type: string
+          maxLength: 2
+        is_worked:
+          type: boolean
+          title: Travaillé
+          description: L'entreprise travaille exceptionnellement ce jour.
+        national:
+          type: boolean
+          readOnly: true
+      required:
+      - date
+      - id
+      - label
+      - national
+    HolidayRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        label:
+          type: string
+          minLength: 1
+          title: Libellé
+          maxLength: 120
+        country:
+          type: string
+          minLength: 1
+          maxLength: 2
+        is_worked:
+          type: boolean
+          title: Travaillé
+          description: L'entreprise travaille exceptionnellement ce jour.
+      required:
+      - date
+      - label
     ImportError:
       type: object
       properties:
@@ -2656,16 +3718,6 @@ components:
           default: false
       required:
       - file
-    KindEnum:
-      enum:
-      - direction
-      - service
-      - team
-      type: string
-      description: |-
-        * `direction` - Direction
-        * `service` - Service
-        * `team` - Équipe
     Kiosk:
       type: object
       properties:
@@ -2790,6 +3842,14 @@ components:
       required:
       - password
       - username
+    MarkReadRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
     Me:
       type: object
       properties:
@@ -2897,6 +3957,60 @@ components:
         * `B` - QR personnel scanné par la borne
         * `C` - Badge imprimé
         * `D` - QR du site sans borne
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/NotificationKindEnum'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        link:
+          type: string
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - body
+      - created_at
+      - id
+      - kind
+      - link
+      - read_at
+      - title
+    NotificationKindEnum:
+      enum:
+      - missing_exit
+      - absent_alert
+      - early_leave
+      - fraud
+      - request
+      - report
+      type: string
+      description: |-
+        * `missing_exit` - Oubli de sortie
+        * `absent_alert` - Absence à H+30
+        * `early_leave` - Départ anticipé
+        * `fraud` - Tentative de fraude
+        * `request` - Demande
+        * `report` - Rapport prêt
     NullEnum:
       enum:
       - null
@@ -3017,7 +4131,7 @@ components:
           maxLength: 120
         kind:
           allOf:
-          - $ref: '#/components/schemas/KindEnum'
+          - $ref: '#/components/schemas/OrgUnitKindEnum'
           title: Type
         parent:
           type: string
@@ -3034,6 +4148,16 @@ components:
       - id
       - manager_name
       - name
+    OrgUnitKindEnum:
+      enum:
+      - direction
+      - service
+      - team
+      type: string
+      description: |-
+        * `direction` - Direction
+        * `service` - Service
+        * `team` - Équipe
     OrgUnitRequest:
       type: object
       properties:
@@ -3044,7 +4168,7 @@ components:
           maxLength: 120
         kind:
           allOf:
-          - $ref: '#/components/schemas/KindEnum'
+          - $ref: '#/components/schemas/OrgUnitKindEnum'
           title: Type
         parent:
           type: string
@@ -3079,6 +4203,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Agent'
+    PaginatedAssignmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
     PaginatedCheckInList:
       type: object
       required:
@@ -3144,6 +4291,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceChangeRequest'
+    PaginatedExceptionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exception'
+    PaginatedHolidayList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holiday'
     PaginatedKioskList:
       type: object
       required:
@@ -3167,6 +4360,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Kiosk'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
     PaginatedOrgUnitList:
       type: object
       required:
@@ -3190,6 +4406,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrgUnit'
+    PaginatedPeriodList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Period'
+    PaginatedScheduleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Schedule'
     PaginatedSiteList:
       type: object
       required:
@@ -3259,6 +4521,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    PaginatedWorkDayList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkDay'
     PairRequestRequest:
       type: object
       properties:
@@ -3374,6 +4659,21 @@ components:
           title: Horaire
         status:
           $ref: '#/components/schemas/AgentStatusEnum'
+    PatchedAssignmentRequest:
+      type: object
+      properties:
+        agent:
+          type: string
+          format: uuid
+        schedule:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
     PatchedCompanyRequest:
       type: object
       properties:
@@ -3485,6 +4785,47 @@ components:
           type: integer
           maximum: 32767
           minimum: 0
+    PatchedExceptionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Libellé
+          maxLength: 120
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        schedule:
+          type: string
+          format: uuid
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          description: Vide = toute l'entreprise.
+    PatchedHolidayRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        label:
+          type: string
+          minLength: 1
+          title: Libellé
+          maxLength: 120
+        country:
+          type: string
+          minLength: 1
+          maxLength: 2
+        is_worked:
+          type: boolean
+          title: Travaillé
+          description: L'entreprise travaille exceptionnellement ce jour.
     PatchedOrgUnitRequest:
       type: object
       properties:
@@ -3495,7 +4836,7 @@ components:
           maxLength: 120
         kind:
           allOf:
-          - $ref: '#/components/schemas/KindEnum'
+          - $ref: '#/components/schemas/OrgUnitKindEnum'
           title: Type
         parent:
           type: string
@@ -3505,6 +4846,49 @@ components:
           type: string
           format: uuid
           nullable: true
+    PatchedScheduleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        weekdays:
+          type: array
+          items:
+            type: integer
+            maximum: 6
+            minimum: 0
+          description: 0 = lundi … 6 = dimanche
+        start_time:
+          type: string
+          format: time
+          title: Heure d'arrivée
+        end_time:
+          type: string
+          format: time
+          title: Heure de départ
+        break_minutes:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Pause (min)
+        late_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de retard (min)
+        early_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de départ anticipé (min)
+        overtime_threshold_min:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Seuil d'heures supplémentaires (min)
     PatchedSiteRequest:
       type: object
       properties:
@@ -3598,6 +4982,58 @@ components:
           type: string
           writeOnly: true
           minLength: 10
+    Period:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        month:
+          type: string
+          format: date
+          description: Premier jour du mois
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PeriodStatusEnum'
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        closed_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        reopen_reason:
+          type: string
+          readOnly: true
+      required:
+      - closed_at
+      - closed_by
+      - id
+      - month
+      - reopen_reason
+      - status
+    PeriodRequest:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+          description: Premier jour du mois
+      required:
+      - month
+    PeriodStatusEnum:
+      enum:
+      - open
+      - closed
+      type: string
+      description: |-
+        * `open` - Ouverte
+        * `closed` - Clôturée
     PersonalKey:
       type: object
       properties:
@@ -3691,6 +5127,22 @@ components:
       required:
       - caption
       - token
+    RecomputeRequest:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - end
+      - start
     RefusalCodeEnum:
       enum:
       - COMPANY_SUSPENDED
@@ -3727,6 +5179,14 @@ components:
         * `OFFLINE_TOO_OLD` - Pointage hors-ligne trop ancien
         * `DUPLICATE` - Doublon (moins de 2 minutes)
         * `PERIOD_CLOSED` - Période clôturée
+    ReopenRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 5
+      required:
+      - reason
     ResultEnum:
       enum:
       - accepted
@@ -3751,6 +5211,108 @@ components:
         * `manager` - Manager
         * `agent` - Agent
         * `auditor` - Auditeur
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 120
+        weekdays:
+          type: array
+          items:
+            type: integer
+            maximum: 6
+            minimum: 0
+          description: 0 = lundi … 6 = dimanche
+        start_time:
+          type: string
+          format: time
+          title: Heure d'arrivée
+        end_time:
+          type: string
+          format: time
+          title: Heure de départ
+        break_minutes:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Pause (min)
+        late_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de retard (min)
+        early_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de départ anticipé (min)
+        overtime_threshold_min:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Seuil d'heures supplémentaires (min)
+        is_night:
+          type: boolean
+          readOnly: true
+        agent_count:
+          type: integer
+          readOnly: true
+      required:
+      - agent_count
+      - id
+      - is_night
+      - name
+    ScheduleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        weekdays:
+          type: array
+          items:
+            type: integer
+            maximum: 6
+            minimum: 0
+          description: 0 = lundi … 6 = dimanche
+        start_time:
+          type: string
+          format: time
+          title: Heure d'arrivée
+        end_time:
+          type: string
+          format: time
+          title: Heure de départ
+        break_minutes:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Pause (min)
+        late_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de retard (min)
+        early_tolerance_min:
+          type: integer
+          maximum: 240
+          minimum: 0
+          title: Tolérance de départ anticipé (min)
+        overtime_threshold_min:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Seuil d'heures supplémentaires (min)
+      required:
+      - name
     Site:
       type: object
       properties:
@@ -4016,6 +5578,154 @@ components:
       required:
       - roles
       - username
+    WorkDay:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        employee_number:
+          type: string
+          readOnly: true
+        unit_name:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/WorkDayStatusEnum'
+          readOnly: true
+        first_in:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_out:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        planned_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        planned_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        late_minutes:
+          type: integer
+          readOnly: true
+        early_leave_minutes:
+          type: integer
+          readOnly: true
+        worked_minutes:
+          type: integer
+          readOnly: true
+        overtime_minutes:
+          type: integer
+          readOnly: true
+        overtime_validated:
+          type: boolean
+          readOnly: true
+        incomplete:
+          type: boolean
+          readOnly: true
+        computed_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent
+      - agent_name
+      - computed_at
+      - date
+      - early_leave_minutes
+      - employee_number
+      - first_in
+      - id
+      - incomplete
+      - last_out
+      - late_minutes
+      - overtime_minutes
+      - overtime_validated
+      - planned_end
+      - planned_start
+      - status
+      - unit_name
+      - worked_minutes
+    WorkDayStatusEnum:
+      enum:
+      - pending
+      - present
+      - late
+      - late_justified
+      - absent
+      - absent_justified
+      - incomplete
+      - holiday
+      - 'off'
+      type: string
+      description: |-
+        * `pending` - En cours
+        * `present` - Présent
+        * `late` - En retard
+        * `late_justified` - Retard justifié
+        * `absent` - Absent
+        * `absent_justified` - Absence justifiée
+        * `incomplete` - Incomplète
+        * `holiday` - Jour férié
+        * `off` - Non travaillé
+    WorkDaySummary:
+      type: object
+      properties:
+        days:
+          type: integer
+        present:
+          type: integer
+        late_count:
+          type: integer
+        late_minutes:
+          type: integer
+        early_leave_count:
+          type: integer
+        early_leave_minutes:
+          type: integer
+        absences:
+          type: integer
+        justified_absences:
+          type: integer
+        incomplete:
+          type: integer
+        worked_minutes:
+          type: integer
+        overtime_minutes:
+          type: integer
+      required:
+      - absences
+      - days
+      - early_leave_count
+      - early_leave_minutes
+      - incomplete
+      - justified_absences
+      - late_count
+      - late_minutes
+      - overtime_minutes
+      - present
+      - worked_minutes
   securitySchemes:
     jwtAuth:
       type: http

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import environ
 
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
     "apps.schedules",
     "apps.kiosks",
     "apps.attendance",
+    "apps.requests_app",
+    "apps.notifications",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -212,6 +215,29 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_TIME_LIMIT = 300
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+def _beat_schedule() -> dict[str, Any]:
+    from celery.schedules import crontab
+
+    return {
+        # RG-04: absences become final at the end of the working day.
+        "close-day": {"task": "attendance.close_day", "schedule": crontab(hour=23, minute=30)},
+        # RG-05: entries without exit become incomplete after midnight.
+        "missing-exits": {
+            "task": "attendance.missing_exits",
+            "schedule": crontab(hour=0, minute=20),
+        },
+        # EF-27: alert managers 30 minutes after the expected arrival.
+        "absence-alerts": {
+            "task": "attendance.absence_alerts",
+            "schedule": crontab(minute="*/15", hour="5-12"),
+        },
+    }
+
+
+CELERY_BEAT_SCHEDULE = _beat_schedule()
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PointQR <no-reply@pointqr.ci>")
 
 LOGGING = {
     "version": 1,

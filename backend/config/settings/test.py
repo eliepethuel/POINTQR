@@ -17,3 +17,5 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # Second-factor throttling waits between attempts; tests assert codes, not timing.
 OTP_TOTP_THROTTLE_FACTOR = 0
+# Async tests (WebSocket) run queries in worker threads: never keep their connections open.
+DATABASES["default"]["CONN_MAX_AGE"] = 0
