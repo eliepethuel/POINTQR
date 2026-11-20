@@ -1,0 +1,227 @@
+<pq-page-header title="Entreprises clientes" eyebrow="Console PointQR">
+  <button type="button" class="pq-btn pq-btn-highlight" (click)="openWizard()">
+    Nouvelle entreprise
+  </button>
+</pq-page-header>
+
+@if (stats.value(); as s) {
+  <div class="kpis">
+    <div class="pq-card kpi">
+      <span class="pq-mono" [pqCountUp]="s.companies"></span>
+      <p>entreprises</p>
+    </div>
+    <div class="pq-card kpi">
+      <span class="pq-mono ok" [pqCountUp]="s.active_companies"></span>
+      <p>actives</p>
+    </div>
+    <div class="pq-card kpi">
+      <span class="pq-mono" [pqCountUp]="s.agents"></span>
+      <p>agents</p>
+    </div>
+    <div class="pq-card kpi">
+      <span class="pq-mono" [pqCountUp]="s.checkins_today"></span>
+      <p>pointages aujourd'hui</p>
+    </div>
+  </div>
+}
+
+<section class="pq-card">
+  <table class="pq-table">
+    <thead>
+      <tr>
+        <th>Entreprise</th>
+        <th>Code</th>
+        <th>Sous-domaine</th>
+        <th>Abonnement</th>
+        <th>État</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (company of companies.value()?.results ?? []; track company.id; let i = $index) {
+        <tr pqRevealOnScroll [revealIndex]="i">
+          <td>
+            <strong>{{ company.legal_name }}</strong><br /><span class="muted">{{
+              company.sector
+            }}</span>
+          </td>
+          <td class="pq-mono">{{ company.code }}</td>
+          <td class="pq-mono">{{ company.slug }}.pointqr.ci</td>
+          <td>
+            @if (company.current_subscription; as sub) {
+              {{ sub['plan'] }} · {{ sub['max_agents'] }} agents · jusqu'au
+              {{ sub['end_date'] | date: 'dd/MM/yyyy' }}
+            } @else {
+              <span class="pq-badge pq-badge-danger">aucun</span>
+            }
+          </td>
+          <td>
+            <span
+              class="pq-badge"
+              [class.pq-badge-success]="company.status === 'active'"
+              [class.pq-badge-danger]="company.status === 'suspended'"
+            >
+              {{ company.status === 'active' ? 'active' : 'suspendue' }}
+            </span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="pq-btn pq-btn-sm"
+              [class.pq-btn-danger]="company.status === 'active'"
+              (click)="toggle(company)"
+            >
+              {{ company.status === 'active' ? 'Suspendre' : 'Réactiver' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>
+
+<pq-drawer [open]="wizardOpen()" title="Nouvelle entreprise" (closed)="wizardOpen.set(false)">
+  <ol class="stepper" aria-label="Étapes">
+    @for (label of steps; track label; let i = $index) {
+      <li [class.done]="i < step()" [class.current]="i === step()">
+        <span class="pq-mono">{{ i + 1 }}</span>{{ label }}
+      </li>
+    }
+  </ol>
+
+  <form class="form" (ngSubmit)="step() === 3 ? submit() : next()">
+    @switch (step()) {
+      @case (0) {
+        <div class="pane pq-pop-in">
+          <label class="pq-field"
+            ><span class="pq-label">Raison sociale</span>
+            <input
+              class="pq-input"
+              name="legal_name"
+              required
+              [(ngModel)]="form.legal_name"
+              (blur)="slugify()"
+          /></label>
+          <label class="pq-field"
+            ><span class="pq-label">Sous-domaine</span>
+            <input
+              class="pq-input pq-mono"
+              name="slug"
+              required
+              pattern="[a-z0-9-]+"
+              [(ngModel)]="form.slug"
+            />
+            <span class="pq-hint">{{ form.slug || 'nom' }}.pointqr.ci</span></label
+          >
+          <label class="pq-field"
+            ><span class="pq-label">Code entreprise (4 à 12 caractères)</span>
+            <input
+              class="pq-input pq-mono"
+              name="code"
+              required
+              [(ngModel)]="form.code"
+              maxlength="12"
+          /></label>
+          <label class="pq-field"
+            ><span class="pq-label">Secteur</span>
+            <input class="pq-input" name="sector" [(ngModel)]="form.sector"
+          /></label>
+        </div>
+      }
+      @case (1) {
+        <div class="pane pq-pop-in">
+          <label class="pq-field"
+            ><span class="pq-label">Formule</span>
+            <select class="pq-select" name="plan" [(ngModel)]="form.plan">
+              <option value="starter">Essentiel</option>
+              <option value="business">Entreprise</option>
+              <option value="enterprise">Grand compte</option>
+            </select></label
+          >
+          <div class="pq-grid-2">
+            <label class="pq-field"
+              ><span class="pq-label">Agents max.</span>
+              <input
+                class="pq-input"
+                type="number"
+                min="1"
+                name="max_agents"
+                [(ngModel)]="form.max_agents"
+            /></label>
+            <label class="pq-field"
+              ><span class="pq-label">Sites max.</span>
+              <input
+                class="pq-input"
+                type="number"
+                min="1"
+                name="max_sites"
+                [(ngModel)]="form.max_sites"
+            /></label>
+            <label class="pq-field"
+              ><span class="pq-label">Bornes max.</span>
+              <input
+                class="pq-input"
+                type="number"
+                min="1"
+                name="max_kiosks"
+                [(ngModel)]="form.max_kiosks"
+            /></label>
+          </div>
+        </div>
+      }
+      @case (2) {
+        <div class="pane pq-pop-in">
+          <label class="pq-field"
+            ><span class="pq-label">Identifiant de l'administrateur</span>
+            <input
+              class="pq-input"
+              name="admin_username"
+              required
+              [(ngModel)]="form.admin_username"
+          /></label>
+          <label class="pq-field"
+            ><span class="pq-label">Mot de passe provisoire (10 caractères min.)</span>
+            <input
+              class="pq-input"
+              type="password"
+              name="admin_password"
+              required
+              minlength="10"
+              autocomplete="new-password"
+              [(ngModel)]="form.admin_password"
+          /></label>
+          <label class="pq-field"
+            ><span class="pq-label">E-mail</span>
+            <input class="pq-input" type="email" name="admin_email" [(ngModel)]="form.admin_email"
+          /></label>
+          <p class="pq-hint">
+            La double authentification lui sera demandée à la première connexion.
+          </p>
+        </div>
+      }
+      @case (3) {
+        <dl class="pane summary pq-pop-in">
+          <dt>Entreprise</dt>
+          <dd>{{ form.legal_name }} ({{ form.code | uppercase }})</dd>
+          <dt>Adresse</dt>
+          <dd class="pq-mono">{{ form.slug }}.pointqr.ci</dd>
+          <dt>Formule</dt>
+          <dd>
+            {{ form.plan }} · {{ form.max_agents }} agents · {{ form.max_sites }} sites ·
+            {{ form.max_kiosks }} bornes
+          </dd>
+          <dt>Administrateur</dt>
+          <dd>{{ form.admin_username }}</dd>
+        </dl>
+      }
+    }
+    <div class="nav">
+      @if (step() > 0) {
+        <button type="button" class="pq-btn pq-btn-ghost" (click)="previous()">Précédent</button>
+      }
+      <button type="submit" class="pq-btn pq-btn-primary" [disabled]="busy()">
+        {{ step() === 3 ? 'Créer l’entreprise' : 'Suivant' }}
+      </button>
+    </div>
+  </form>
+</pq-drawer>
