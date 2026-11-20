@@ -1,0 +1,160 @@
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 220px;
+  padding: 32px;
+  border: 2px dashed var(--pq-border);
+  border-radius: var(--pq-radius-lg);
+  background: var(--pq-surface);
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--pq-dur-base);
+}
+.drop:focus-within,
+.drop:hover,
+.drop.dragging {
+  border-color: var(--pq-accent);
+}
+/* The zone "breathes" while hovered or while a file is dragged over it */
+.drop-ring {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(124 92 255 / 0.35), transparent 70%);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--pq-dur-base),
+    transform var(--pq-dur-slow) var(--pq-ease-out-expo);
+}
+.drop:hover .drop-ring,
+.drop.dragging .drop-ring {
+  opacity: 1;
+  animation: breathe 2.2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+}
+.drop-title {
+  position: relative;
+  font: 600 1.1rem var(--pq-font-display);
+}
+.drop-hint {
+  position: relative;
+  color: var(--pq-text-muted);
+  font-size: 0.875rem;
+}
+
+.liquid {
+  position: relative;
+  height: 28px;
+  margin: 16px 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--pq-surface-2);
+}
+.liquid-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--pq-accent), var(--pq-success));
+  transition: transform var(--pq-dur-slow) var(--pq-ease-out-expo);
+}
+.wave {
+  position: absolute;
+  right: -12px;
+  top: 0;
+  width: 48px;
+  height: 100%;
+  fill: var(--pq-success);
+  animation: wave 1.2s linear infinite;
+}
+@keyframes wave {
+  to {
+    transform: translateY(-4px);
+  }
+}
+.liquid-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.result {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.stats p {
+  margin: 0;
+  color: var(--pq-text-muted);
+}
+.stats strong {
+  display: block;
+  font-size: 1.8rem;
+  color: var(--pq-text);
+}
+.stats .ok {
+  color: var(--pq-success);
+}
+.stats .ko {
+  color: var(--pq-danger);
+}
+.errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+/* Error lines unfold one after another */
+.error-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgb(255 107 74 / 0.06);
+  animation: unfold 420ms var(--pq-ease-out-expo) both;
+}
+.field {
+  font-weight: 600;
+}
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drop-ring,
+  .wave,
+  .error-line {
+    animation: none;
+  }
+}

@@ -1,0 +1,223 @@
+<pq-page-header title="Agents" eyebrow="Organisation" [subtitle]="total() + ' agents'">
+  @if (canEdit()) {
+    <a class="pq-btn" routerLink="/app/agents/import">Importer Excel / CSV</a>
+    <button type="button" class="pq-btn pq-btn-primary" (click)="edit()">Nouvel agent</button>
+  }
+</pq-page-header>
+
+<div class="pq-toolbar">
+  <input
+    class="pq-input"
+    type="search"
+    placeholder="Rechercher un nom, un matricule…"
+    aria-label="Rechercher"
+    [ngModel]="search()"
+    (ngModelChange)="onSearch($event)"
+  />
+</div>
+
+<section class="pq-card table-card">
+  @if (agents.isLoading() && !agents.hasValue()) {
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="skeleton-row" pqShimmer></div>
+    }
+  } @else if (rows().length === 0) {
+    <pq-empty-state
+      title="Aucun agent"
+      message="Importez votre fichier du personnel ou créez un premier agent."
+    />
+  } @else {
+    <div class="row head" role="row">
+      <span>Matricule</span><span>Nom</span><span class="hide-sm">Fonction</span>
+      <span class="hide-sm">Unité</span><span class="hide-sm">Site</span><span>Téléphone</span>
+    </div>
+    <cdk-virtual-scroll-viewport
+      itemSize="56"
+      class="viewport"
+      role="table"
+      aria-label="Liste des agents"
+    >
+      <button
+        type="button"
+        class="row"
+        *cdkVirtualFor="let agent of rows(); let i = index; trackBy: trackById"
+        (click)="open(agent)"
+        pqRevealOnScroll
+        [revealIndex]="i % 12"
+      >
+        <span class="pq-mono">{{ agent.employee_number }}</span>
+        <span class="name">
+          <span class="avatar" [style.view-transition-name]="'agent-' + agent.id"
+            >{{ agent.first_names[0] }}{{ agent.last_name[0] }}</span
+          >
+          {{ agent.full_name }}
+          @if (agent.status === 'inactive') {
+            <span class="pq-badge">inactif</span>
+          }
+        </span>
+        <span class="hide-sm muted">{{ agent.job_title || '—' }}</span>
+        <span class="hide-sm muted">{{ agent.org_unit_name || '—' }}</span>
+        <span class="hide-sm muted">{{ agent.site_name || '—' }}</span>
+        <span>
+          @if (agent.has_device) {
+            <span class="pq-badge pq-badge-success">lié</span>
+          } @else {
+            <span class="pq-badge">à activer</span>
+          }
+        </span>
+      </button>
+    </cdk-virtual-scroll-viewport>
+  }
+</section>
+
+<pq-drawer
+  [open]="!!selected()"
+  [title]="selected()?.full_name ?? ''"
+  (closed)="selected.set(null)"
+>
+  @if (selected(); as agent) {
+    <div class="detail">
+      <div class="detail-head">
+        <span class="avatar big" [style.view-transition-name]="'agent-' + agent.id"
+          >{{ agent.first_names[0] }}{{ agent.last_name[0] }}</span
+        >
+        <div>
+          <p class="pq-mono muted">{{ agent.employee_number }}</p>
+          <p>{{ agent.job_title || 'Fonction non renseignée' }}</p>
+        </div>
+      </div>
+      <dl class="facts">
+        <dt>Unité</dt>
+        <dd>{{ agent.org_unit_name || '—' }}</dd>
+        <dt>Site</dt>
+        <dd>{{ agent.site_name || '—' }}</dd>
+        <dt>Téléphone</dt>
+        <dd>{{ agent.phone || '—' }}</dd>
+        <dt>E-mail</dt>
+        <dd>{{ agent.email || '—' }}</dd>
+      </dl>
+      <h3>Téléphone lié</h3>
+      @for (device of devices.value() ?? []; track device.id) {
+        <p class="device">
+          {{ device.model || 'Téléphone' }} · {{ device.os }}
+          @if (device.is_active) {
+            <span class="pq-badge pq-badge-success">actif</span>
+          } @else {
+            <span class="pq-badge">révoqué</span>
+          }
+        </p>
+      } @empty {
+        <p class="muted">Aucun téléphone lié : l'agent l'activera à sa première connexion.</p>
+      }
+      <div class="actions">
+        <a class="pq-btn" [routerLink]="['/app/agents', agent.id]">Fiche complète</a>
+        @if (canEdit()) {
+          <button type="button" class="pq-btn" (click)="edit(agent)">Modifier</button>
+          <button type="button" class="pq-btn" (click)="rotateBadge(agent)">
+            Réimprimer le badge
+          </button>
+        }
+      </div>
+    </div>
+  }
+</pq-drawer>
+
+<pq-drawer
+  [open]="!!draft()"
+  [title]="draft()?.id ? 'Modifier l’agent' : 'Nouvel agent'"
+  (closed)="draft.set(null)"
+>
+  @if (draft(); as d) {
+    <form class="form" (ngSubmit)="save()">
+      <label class="pq-field"
+        ><span class="pq-label">Matricule</span>
+        <input
+          class="pq-input pq-mono"
+          name="employee_number"
+          required
+          [ngModel]="d.employee_number"
+          (ngModelChange)="patchDraft({ employee_number: $event })"
+      /></label>
+      <div class="pq-grid-2">
+        <label class="pq-field"
+          ><span class="pq-label">Nom</span>
+          <input
+            class="pq-input"
+            name="last_name"
+            required
+            [ngModel]="d.last_name"
+            (ngModelChange)="patchDraft({ last_name: $event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Prénoms</span>
+          <input
+            class="pq-input"
+            name="first_names"
+            required
+            [ngModel]="d.first_names"
+            (ngModelChange)="patchDraft({ first_names: $event })"
+        /></label>
+      </div>
+      <label class="pq-field"
+        ><span class="pq-label">Fonction</span>
+        <input
+          class="pq-input"
+          name="job_title"
+          [ngModel]="d.job_title"
+          (ngModelChange)="patchDraft({ job_title: $event })"
+      /></label>
+      <div class="pq-grid-2">
+        <label class="pq-field"
+          ><span class="pq-label">Téléphone</span>
+          <input
+            class="pq-input"
+            name="phone"
+            [ngModel]="d.phone"
+            (ngModelChange)="patchDraft({ phone: $event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">E-mail</span>
+          <input
+            class="pq-input"
+            type="email"
+            name="email"
+            [ngModel]="d.email"
+            (ngModelChange)="patchDraft({ email: $event })"
+        /></label>
+      </div>
+      <div class="pq-grid-2">
+        <label class="pq-field"
+          ><span class="pq-label">Site</span>
+          <select
+            class="pq-select"
+            name="site"
+            [ngModel]="d.site"
+            (ngModelChange)="patchDraft({ site: $event })"
+          >
+            <option [ngValue]="null">—</option>
+            @for (site of sites.value()?.results ?? []; track site.id) {
+              <option [ngValue]="site.id">{{ site.name }}</option>
+            }
+          </select></label
+        >
+        <label class="pq-field"
+          ><span class="pq-label">Unité</span>
+          <select
+            class="pq-select"
+            name="org_unit"
+            [ngModel]="d.org_unit"
+            (ngModelChange)="patchDraft({ org_unit: $event })"
+          >
+            <option [ngValue]="null">—</option>
+            @for (unit of units.value()?.results ?? []; track unit.id) {
+              <option [ngValue]="unit.id">{{ unit.name }}</option>
+            }
+          </select></label
+        >
+      </div>
+      <button type="submit" class="pq-btn pq-btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </form>
+  }
+</pq-drawer>
