@@ -1,5 +1,9 @@
-"""WebSocket routes. Real-time consumers are registered here by each app."""
+"""WebSocket routes."""
 
-from django.urls import URLPattern, URLResolver
+from django.urls import URLPattern, URLResolver, path
 
-websocket_urlpatterns: list[URLPattern | URLResolver] = []
+from apps.attendance.consumers import DashboardConsumer
+
+websocket_urlpatterns: list[URLPattern | URLResolver] = [
+    path("ws/dashboard/", DashboardConsumer.as_asgi()),
+]
