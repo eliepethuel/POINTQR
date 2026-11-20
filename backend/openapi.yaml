@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: PointQR API
+  version: 0.1.0
+  description: API de pointage par QR code dynamique — « Le pointage qui ne ment pas.
+    »
+paths:
+  /api/v1/health/:
+    get:
+      operationId: system_health
+      description: Public liveness probe; also returns the authoritative server clock.
+      tags:
+      - system
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        version:
+          type: string
+        server_time:
+          type: string
+          format: date-time
+        epoch_ms:
+          type: integer
+        database:
+          type: boolean
+        cache:
+          type: boolean
+      required:
+      - cache
+      - database
+      - epoch_ms
+      - server_time
+      - status
+      - version
+    StatusEnum:
+      enum:
+      - ok
+      - degraded
+      type: string
+      description: |-
+        * `ok` - ok
+        * `degraded` - degraded
