@@ -120,6 +120,30 @@ export const routes: Routes = [
         loadComponent: () => import('./features/users/users-page').then((m) => m.UsersPage),
       },
       {
+        path: 'demandes',
+        title: 'Demandes · PointQR',
+        loadComponent: () =>
+          import('./features/requests/requests-page').then((m) => m.RequestsPage),
+      },
+      {
+        path: 'rapports',
+        title: 'Rapports · PointQR',
+        data: { roles: ['company_admin', 'hr', 'auditor'] },
+        loadComponent: () => import('./features/reports/reports-page').then((m) => m.ReportsPage),
+      },
+      {
+        path: 'audit',
+        title: "Journal d'audit · PointQR",
+        data: { roles: ['company_admin', 'auditor'] },
+        loadComponent: () => import('./features/audit/audit-page').then((m) => m.AuditPage),
+      },
+      {
+        path: 'mon-historique',
+        title: 'Mon historique · PointQR',
+        data: { roles: ['agent'] },
+        loadComponent: () => import('./features/me/my-history-page').then((m) => m.MyHistoryPage),
+      },
+      {
         path: 'parametres',
         title: 'Paramètres · PointQR',
         loadComponent: () =>
