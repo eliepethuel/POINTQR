@@ -17,6 +17,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
   },
   {
+    path: 'kiosk',
+    title: 'Borne · PointQR',
+    loadComponent: () => import('./kiosk/kiosk-page').then((m) => m.KioskPage),
+  },
+  {
+    path: 'agent',
+    title: 'Pointer · PointQR',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['agent'] },
+    loadComponent: () => import('./agent/agent-page').then((m) => m.AgentPage),
+  },
+  {
     path: 'plateforme',
     canActivate: [authGuard, superadminGuard],
     loadComponent: () => import('./features/shell/app-shell').then((m) => m.AppShell),
@@ -42,6 +54,19 @@ export const routes: Routes = [
         data: { roles: STAFF },
         loadComponent: () =>
           import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+      },
+      {
+        path: 'pointages',
+        title: 'Pointages · PointQR',
+        data: { roles: STAFF },
+        loadComponent: () =>
+          import('./features/attendance/checkins-page').then((m) => m.CheckinsPage),
+      },
+      {
+        path: 'bornes',
+        title: 'Bornes · PointQR',
+        data: { roles: ['company_admin', 'auditor'] },
+        loadComponent: () => import('./features/kiosks/kiosks-page').then((m) => m.KiosksPage),
       },
       {
         path: 'agents',

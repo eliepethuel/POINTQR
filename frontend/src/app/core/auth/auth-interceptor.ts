@@ -9,6 +9,8 @@ const AUTH_PATHS = ['/api/v1/auth/login/', '/api/v1/auth/mfa/verify/', '/api/v1/
 /** Adds the in-memory access token and refreshes it silently once on a 401. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const session = inject(Session);
+  // Kiosk machine calls carry their own credentials (kiosk interceptor).
+  if (req.url.startsWith('/api/v1/kiosk/')) return next(req);
   const isAuthCall = AUTH_PATHS.some((p) => req.url.startsWith(p));
   const withToken = () => {
     const token = session.token();

@@ -1,0 +1,16 @@
+{
+  "name": "PointQR — Le pointage qui ne ment pas.",
+  "short_name": "PointQR",
+  "description": "Pointage par QR code dynamique, horodaté par le serveur, sans biométrie.",
+  "lang": "fr",
+  "start_url": "/agent",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E0F1A",
+  "theme_color": "#0E0F1A",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

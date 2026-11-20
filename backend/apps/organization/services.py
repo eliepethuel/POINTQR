@@ -30,9 +30,9 @@ def ensure_badge_key(agent: Agent) -> None:
 
 def rotate_badge(agent: Agent, *, actor: Any, request: Any = None) -> Agent:
     """Reprinting a badge invalidates the previous one (lost or lent card)."""
-    agent.badge_key = encrypt(new_secret_key())
+    # The version is part of the signed message: older cards are recognised and refused.
     agent.badge_version += 1
-    agent.save(update_fields=["badge_key", "badge_version", "updated_at"])
+    agent.save(update_fields=["badge_version", "updated_at"])
     record(
         "agent.badge_rotated",
         agent,
