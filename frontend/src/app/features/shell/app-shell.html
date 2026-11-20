@@ -1,0 +1,84 @@
+<div class="shell" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+  <aside class="sidebar" aria-label="Navigation principale">
+    <div class="sidebar-head">
+      <a class="brand" routerLink="/">Point<span>QR</span></a>
+      <button
+        type="button"
+        class="pq-btn pq-btn-ghost pq-btn-icon collapse"
+        (click)="toggleCollapse()"
+        [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Replier le menu'"
+      >
+        <svg lucidePanelLeft [size]="18"></svg>
+      </button>
+    </div>
+
+    @if (session.company(); as company) {
+      <p class="company" [title]="company.legal_name">{{ company.legal_name }}</p>
+    }
+
+    <nav>
+      @for (section of sections(); track section.label) {
+        <p class="section">{{ section.label }}</p>
+        @for (item of section.items; track item.path) {
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            (click)="mobileOpen.set(false)"
+            [attr.title]="collapsed() ? item.label : null"
+          >
+            <svg [lucideIcon]="$any(item.icon)" [size]="18"></svg>
+            <span class="label">{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button
+        type="button"
+        class="pq-btn pq-btn-ghost pq-btn-icon menu"
+        (click)="mobileOpen.set(!mobileOpen())"
+        aria-label="Menu"
+      >
+        <svg lucidePanelLeft [size]="18"></svg>
+      </button>
+      <div class="spacer"></div>
+      <button
+        type="button"
+        class="pq-btn pq-btn-ghost pq-btn-icon"
+        (click)="toggleTheme($event)"
+        [attr.aria-label]="
+          theme.mode() === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre'
+        "
+      >
+        @if (theme.mode() === 'dark') {
+          <svg lucideSun [size]="18"></svg>
+        } @else {
+          <svg lucideMoon [size]="18"></svg>
+        }
+      </button>
+      <div class="user">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="user-name">{{
+          session.user()?.display_name || session.user()?.username
+        }}</span>
+      </div>
+      <button
+        type="button"
+        class="pq-btn pq-btn-ghost pq-btn-icon"
+        (click)="session.logout()"
+        aria-label="Se déconnecter"
+      >
+        <svg lucideLogOut [size]="18"></svg>
+      </button>
+    </header>
+
+    <main class="content" id="contenu">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+<pq-toaster />
