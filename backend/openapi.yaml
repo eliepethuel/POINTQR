@@ -5,6 +5,509 @@ info:
   description: API de pointage par QR code dynamique — « Le pointage qui ne ment pas.
     »
 paths:
+  /api/v1/agents/:
+    get:
+      operationId: agents_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgentList'
+          description: ''
+    post:
+      operationId: agents_create
+      tags:
+      - agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+          description: ''
+  /api/v1/agents/{id}/:
+    get:
+      operationId: agents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+          description: ''
+    put:
+      operationId: agents_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+          description: ''
+    patch:
+      operationId: agents_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+          description: ''
+    delete:
+      operationId: agents_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/agents/{id}/devices/:
+    get:
+      operationId: agents_devices
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/agents/{id}/rotate-badge/:
+    post:
+      operationId: agents_rotate_badge
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+          description: ''
+  /api/v1/agents/import/:
+    post:
+      operationId: agents_import
+      tags:
+      - agents
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportReport'
+          description: ''
+  /api/v1/agents/import-template/:
+    get:
+      operationId: agents_import_template
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/mfa/verify/:
+    post:
+      operationId: auth_mfa_verify
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MfaVerifyRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: auth_refresh
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+  /api/v1/device-requests/:
+    get:
+      operationId: device_requests_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - device-requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceChangeRequestList'
+          description: ''
+  /api/v1/device-requests/{id}/:
+    get:
+      operationId: device_requests_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande de changement
+          de téléphone.
+        required: true
+      tags:
+      - device-requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceChangeRequest'
+          description: ''
+  /api/v1/device-requests/{id}/approve/:
+    post:
+      operationId: device_requests_approve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande de changement
+          de téléphone.
+        required: true
+      tags:
+      - device-requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceChangeRequest'
+          description: ''
+  /api/v1/device-requests/{id}/reject/:
+    post:
+      operationId: device_requests_reject
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande de changement
+          de téléphone.
+        required: true
+      tags:
+      - device-requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceChangeRequest'
+          description: ''
+  /api/v1/devices/{id}/:
+    get:
+      operationId: devices_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) appareil.
+        required: true
+      tags:
+      - devices
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/devices/{id}/revoke/:
+    post:
+      operationId: devices_revoke
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) appareil.
+        required: true
+      tags:
+      - devices
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
   /api/v1/health/:
     get:
       operationId: system_health
@@ -20,8 +523,1485 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/v1/org-units/:
+    get:
+      operationId: org_units_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - org-units
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrgUnitList'
+          description: ''
+    post:
+      operationId: org_units_create
+      tags:
+      - org-units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgUnit'
+          description: ''
+  /api/v1/org-units/{id}/:
+    get:
+      operationId: org_units_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) unité.
+        required: true
+      tags:
+      - org-units
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgUnit'
+          description: ''
+    put:
+      operationId: org_units_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) unité.
+        required: true
+      tags:
+      - org-units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrgUnitRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgUnit'
+          description: ''
+    patch:
+      operationId: org_units_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) unité.
+        required: true
+      tags:
+      - org-units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrgUnitRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrgUnitRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrgUnitRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgUnit'
+          description: ''
+    delete:
+      operationId: org_units_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) unité.
+        required: true
+      tags:
+      - org-units
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/org-units/tree/:
+    get:
+      operationId: org_units_tree
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - org-units
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrgTreeNode'
+          description: ''
+  /api/v1/platform/companies/:
+    get:
+      operationId: platform_companies_list
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCompanyList'
+          description: ''
+  /api/v1/platform/companies/{id}/:
+    get:
+      operationId: platform_companies_retrieve
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entreprise.
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+    put:
+      operationId: platform_companies_update
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entreprise.
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CompanyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompanyRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+    patch:
+      operationId: platform_companies_partial_update
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entreprise.
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+  /api/v1/platform/companies/{id}/reactivate/:
+    post:
+      operationId: platform_companies_reactivate
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entreprise.
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+  /api/v1/platform/companies/{id}/suspend/:
+    post:
+      operationId: platform_companies_suspend
+      description: 'Super-admin console: companies and their status.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entreprise.
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+  /api/v1/platform/companies/onboard/:
+    post:
+      operationId: platform_companies_onboard
+      description: 'Super-admin console: companies and their status.'
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OnboardingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OnboardingRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+  /api/v1/platform/stats/:
+    get:
+      operationId: platform_stats
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformStats'
+          description: ''
+  /api/v1/platform/subscriptions/:
+    get:
+      operationId: platform_subscriptions_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSubscriptionList'
+          description: ''
+    post:
+      operationId: platform_subscriptions_create
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/platform/subscriptions/{id}/:
+    get:
+      operationId: platform_subscriptions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) abonnement.
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    put:
+      operationId: platform_subscriptions_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) abonnement.
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    patch:
+      operationId: platform_subscriptions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) abonnement.
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSubscriptionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSubscriptionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSubscriptionRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    delete:
+      operationId: platform_subscriptions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) abonnement.
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/settings/company/:
+    get:
+      operationId: company_settings_get
+      description: GET for every member (branding), PATCH for the company administrator.
+      tags:
+      - settings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanySettings'
+          description: ''
+    patch:
+      operationId: company_settings_update
+      description: GET for every member (branding), PATCH for the company administrator.
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanySettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanySettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanySettingsRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanySettings'
+          description: ''
+  /api/v1/sites/:
+    get:
+      operationId: sites_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - sites
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSiteList'
+          description: ''
+    post:
+      operationId: sites_create
+      tags:
+      - sites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+          description: ''
+  /api/v1/sites/{id}/:
+    get:
+      operationId: sites_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) site.
+        required: true
+      tags:
+      - sites
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+          description: ''
+    put:
+      operationId: sites_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) site.
+        required: true
+      tags:
+      - sites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SiteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+          description: ''
+    patch:
+      operationId: sites_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) site.
+        required: true
+      tags:
+      - sites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+          description: ''
+    delete:
+      operationId: sites_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) site.
+        required: true
+      tags:
+      - sites
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/users/:
+    get:
+      operationId: users_list
+      description: Company accounts and roles. Deactivate instead of deleting (audit
+        trail).
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: users_create
+      description: Company accounts and roles. Deactivate instead of deleting (audit
+        trail).
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/{id}/:
+    get:
+      operationId: users_retrieve
+      description: Company accounts and roles. Deactivate instead of deleting (audit
+        trail).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) utilisateur.
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: users_update
+      description: Company accounts and roles. Deactivate instead of deleting (audit
+        trail).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) utilisateur.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: users_partial_update
+      description: Company accounts and roles. Deactivate instead of deleting (audit
+        trail).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) utilisateur.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
 components:
   schemas:
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        employee_number:
+          type: string
+          title: Matricule
+          maxLength: 32
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 100
+        first_names:
+          type: string
+          title: Prénoms
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        job_title:
+          type: string
+          title: Fonction
+          maxLength: 120
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 32
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        site:
+          type: string
+          format: uuid
+          nullable: true
+        site_name:
+          type: string
+          readOnly: true
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          title: Unité
+        org_unit_name:
+          type: string
+          readOnly: true
+        schedule:
+          type: string
+          format: uuid
+          nullable: true
+          title: Horaire
+        status:
+          $ref: '#/components/schemas/AgentStatusEnum'
+        has_device:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - created_at
+      - employee_number
+      - first_names
+      - full_name
+      - has_device
+      - id
+      - last_name
+      - org_unit_name
+      - site_name
+    AgentRequest:
+      type: object
+      properties:
+        employee_number:
+          type: string
+          minLength: 1
+          title: Matricule
+          maxLength: 32
+        last_name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 100
+        first_names:
+          type: string
+          minLength: 1
+          title: Prénoms
+          maxLength: 150
+        job_title:
+          type: string
+          title: Fonction
+          maxLength: 120
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 32
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        site:
+          type: string
+          format: uuid
+          nullable: true
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          title: Unité
+        schedule:
+          type: string
+          format: uuid
+          nullable: true
+          title: Horaire
+        status:
+          $ref: '#/components/schemas/AgentStatusEnum'
+      required:
+      - employee_number
+      - first_names
+      - last_name
+    AgentStatusEnum:
+      enum:
+      - active
+      - inactive
+      type: string
+      description: |-
+        * `active` - Actif
+        * `inactive` - Inactif
+    AuthResponse:
+      type: object
+      description: Either tokens (step=authenticated) or an MFA challenge.
+      properties:
+        step:
+          $ref: '#/components/schemas/StepEnum'
+        access:
+          type: string
+        user:
+          $ref: '#/components/schemas/Me'
+        mfa_token:
+          type: string
+        otpauth_url:
+          type: string
+        secret:
+          type: string
+      required:
+      - step
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        legal_name:
+          type: string
+          title: Raison sociale
+          maxLength: 200
+        slug:
+          type: string
+          title: Sous-domaine
+          description: ministere-x → ministere-x.pointqr.ci
+          maxLength: 63
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          title: Code entreprise
+          description: Saisi dans l'application mobile et sur la borne.
+          pattern: ^[A-Z0-9]{4,12}$
+          maxLength: 12
+        sector:
+          type: string
+          title: Secteur
+          maxLength: 120
+        country:
+          type: string
+          title: Pays
+          maxLength: 2
+        timezone:
+          type: string
+          title: Fuseau horaire
+          maxLength: 64
+        contact_name:
+          type: string
+          title: Contact
+          maxLength: 120
+        contact_email:
+          title: E-mail du contact
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        contact_phone:
+          type: string
+          title: Téléphone du contact
+          maxLength: 32
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CompanyStatusEnum'
+          readOnly: true
+        primary_color:
+          type: string
+          maxLength: 7
+        highlight_color:
+          type: string
+          maxLength: 7
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        current_subscription:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        agent_count:
+          type: integer
+          readOnly: true
+      required:
+      - agent_count
+      - code
+      - created_at
+      - current_subscription
+      - id
+      - legal_name
+      - slug
+      - status
+    CompanyBranding:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        legal_name:
+          type: string
+          readOnly: true
+          title: Raison sociale
+        slug:
+          type: string
+          readOnly: true
+          title: Sous-domaine
+          description: ministere-x → ministere-x.pointqr.ci
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          readOnly: true
+          title: Code entreprise
+          description: Saisi dans l'application mobile et sur la borne.
+        timezone:
+          type: string
+          readOnly: true
+          title: Fuseau horaire
+        primary_color:
+          type: string
+          readOnly: true
+        highlight_color:
+          type: string
+          readOnly: true
+        logo:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CompanyStatusEnum'
+          readOnly: true
+      required:
+      - code
+      - highlight_color
+      - id
+      - legal_name
+      - logo
+      - primary_color
+      - slug
+      - status
+      - timezone
+    CompanyRequest:
+      type: object
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          title: Raison sociale
+          maxLength: 200
+        slug:
+          type: string
+          minLength: 1
+          title: Sous-domaine
+          description: ministere-x → ministere-x.pointqr.ci
+          maxLength: 63
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          minLength: 1
+          title: Code entreprise
+          description: Saisi dans l'application mobile et sur la borne.
+          pattern: ^[A-Z0-9]{4,12}$
+          maxLength: 12
+        sector:
+          type: string
+          title: Secteur
+          maxLength: 120
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 2
+        timezone:
+          type: string
+          minLength: 1
+          title: Fuseau horaire
+          maxLength: 64
+        contact_name:
+          type: string
+          title: Contact
+          maxLength: 120
+        contact_email:
+          title: E-mail du contact
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        contact_phone:
+          type: string
+          title: Téléphone du contact
+          maxLength: 32
+        primary_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        highlight_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+      required:
+      - code
+      - legal_name
+      - slug
+    CompanySettings:
+      type: object
+      description: What a company administrator may change (EF-43 branding, rules
+        defaults).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        legal_name:
+          type: string
+          title: Raison sociale
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          title: Sous-domaine
+          description: ministere-x → ministere-x.pointqr.ci
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          readOnly: true
+          title: Code entreprise
+          description: Saisi dans l'application mobile et sur la borne.
+        timezone:
+          type: string
+          title: Fuseau horaire
+          maxLength: 64
+        primary_color:
+          type: string
+          maxLength: 7
+        highlight_color:
+          type: string
+          maxLength: 7
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        default_radius_m:
+          type: integer
+          maximum: 5000
+          minimum: 20
+          title: Rayon de géorepérage par défaut (m)
+        approval_levels:
+          type: integer
+          maximum: 2
+          minimum: 1
+          title: Niveaux de validation
+          description: 1 = manager seul, 2 = manager puis RH (EF-31).
+        wifi_check_enabled:
+          type: boolean
+          title: Contrôle Wi-Fi
+        break_checkins_enabled:
+          type: boolean
+          title: Pointage des pauses
+        retention_checkins_years:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        retention_gps_months:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - code
+      - id
+      - legal_name
+      - slug
+    CompanyStatusEnum:
+      enum:
+      - active
+      - suspended
+      type: string
+      description: |-
+        * `active` - Active
+        * `suspended` - Suspendue
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+          readOnly: true
+        model:
+          type: string
+          readOnly: true
+          title: Modèle
+        os:
+          type: string
+          readOnly: true
+          title: Système
+        bound_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Lié le
+        is_active:
+          type: boolean
+          readOnly: true
+          default: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - agent
+      - bound_at
+      - id
+      - is_active
+      - model
+      - os
+      - revoked_at
+    DeviceChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+          readOnly: true
+        agent_name:
+          type: string
+          readOnly: true
+        model:
+          type: string
+          readOnly: true
+        os:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRequestStatusEnum'
+          readOnly: true
+          default: pending
+        decided_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - agent
+      - agent_name
+      - created_at
+      - decided_at
+      - id
+      - model
+      - os
+      - status
+    DeviceRequestStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - En attente
+        * `approved` - Validée
+        * `rejected` - Refusée
     Health:
       type: object
       properties:
@@ -53,3 +2033,1030 @@ components:
       description: |-
         * `ok` - ok
         * `degraded` - degraded
+    ImportError:
+      type: object
+      properties:
+        line:
+          type: integer
+        field:
+          type: string
+        message:
+          type: string
+      required:
+      - field
+      - line
+      - message
+    ImportReport:
+      type: object
+      properties:
+        total:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        dry_run:
+          type: boolean
+        line_errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportError'
+      required:
+      - created
+      - dry_run
+      - line_errors
+      - total
+      - updated
+    ImportRequestRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        dry_run:
+          type: boolean
+          default: false
+      required:
+      - file
+    KindEnum:
+      enum:
+      - direction
+      - service
+      - team
+      type: string
+      description: |-
+        * `direction` - Direction
+        * `service` - Service
+        * `team` - Équipe
+    LoginRequest:
+      type: object
+      properties:
+        company_code:
+          type: string
+          maxLength: 12
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+      - password
+      - username
+    Me:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Identifiant
+        display_name:
+          type: string
+          readOnly: true
+          title: Nom affiché
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: E-mail
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleEnum'
+        is_superadmin:
+          type: boolean
+          readOnly: true
+        agent_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanyBranding'
+          readOnly: true
+        mfa_enabled:
+          type: boolean
+          readOnly: true
+      required:
+      - agent_id
+      - company
+      - display_name
+      - email
+      - id
+      - is_superadmin
+      - mfa_enabled
+      - roles
+      - username
+    MfaVerifyRequest:
+      type: object
+      properties:
+        mfa_token:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 1
+          pattern: ^\s*\d{6}\s*$
+      required:
+      - code
+      - mfa_token
+    OnboardingRequest:
+      type: object
+      description: Super-admin creates a company, its subscription and first administrator
+        (EF-01, EF-02).
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 63
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          minLength: 1
+          pattern: ^[A-Z0-9]{4,12}$
+        sector:
+          type: string
+          maxLength: 120
+        timezone:
+          type: string
+          minLength: 1
+          default: Africa/Abidjan
+          maxLength: 64
+        contact_name:
+          type: string
+          maxLength: 120
+        contact_email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          default: starter
+        max_agents:
+          type: integer
+          minimum: 1
+          default: 50
+        max_sites:
+          type: integer
+          minimum: 1
+          default: 1
+        max_kiosks:
+          type: integer
+          minimum: 1
+          default: 1
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        admin_username:
+          type: string
+          minLength: 1
+          maxLength: 150
+        admin_password:
+          type: string
+          writeOnly: true
+          minLength: 10
+        admin_email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+      required:
+      - admin_password
+      - admin_username
+      - code
+      - legal_name
+      - slug
+    OrgTreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          type: string
+        manager_name:
+          type: string
+          nullable: true
+        agent_count:
+          type: integer
+        children:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - agent_count
+      - children
+      - id
+      - kind
+      - manager_name
+      - name
+    OrgUnit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 120
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          title: Type
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+        manager:
+          type: string
+          format: uuid
+          nullable: true
+        manager_name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - manager_name
+      - name
+    OrgUnitRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          title: Type
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+        manager:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - name
+    PaginatedAgentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agent'
+    PaginatedCompanyList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+    PaginatedDeviceChangeRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceChangeRequest'
+    PaginatedOrgUnitList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUnit'
+    PaginatedSiteList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Site'
+    PaginatedSubscriptionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PatchedAgentRequest:
+      type: object
+      properties:
+        employee_number:
+          type: string
+          minLength: 1
+          title: Matricule
+          maxLength: 32
+        last_name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 100
+        first_names:
+          type: string
+          minLength: 1
+          title: Prénoms
+          maxLength: 150
+        job_title:
+          type: string
+          title: Fonction
+          maxLength: 120
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 32
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        site:
+          type: string
+          format: uuid
+          nullable: true
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+          title: Unité
+        schedule:
+          type: string
+          format: uuid
+          nullable: true
+          title: Horaire
+        status:
+          $ref: '#/components/schemas/AgentStatusEnum'
+    PatchedCompanyRequest:
+      type: object
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          title: Raison sociale
+          maxLength: 200
+        slug:
+          type: string
+          minLength: 1
+          title: Sous-domaine
+          description: ministere-x → ministere-x.pointqr.ci
+          maxLength: 63
+          pattern: ^[-a-zA-Z0-9_]+$
+        code:
+          type: string
+          minLength: 1
+          title: Code entreprise
+          description: Saisi dans l'application mobile et sur la borne.
+          pattern: ^[A-Z0-9]{4,12}$
+          maxLength: 12
+        sector:
+          type: string
+          title: Secteur
+          maxLength: 120
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 2
+        timezone:
+          type: string
+          minLength: 1
+          title: Fuseau horaire
+          maxLength: 64
+        contact_name:
+          type: string
+          title: Contact
+          maxLength: 120
+        contact_email:
+          title: E-mail du contact
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        contact_phone:
+          type: string
+          title: Téléphone du contact
+          maxLength: 32
+        primary_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        highlight_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+    PatchedCompanySettingsRequest:
+      type: object
+      description: What a company administrator may change (EF-43 branding, rules
+        defaults).
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          title: Raison sociale
+          maxLength: 200
+        timezone:
+          type: string
+          minLength: 1
+          title: Fuseau horaire
+          maxLength: 64
+        primary_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        highlight_color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        logo:
+          type: string
+          format: binary
+        default_radius_m:
+          type: integer
+          maximum: 5000
+          minimum: 20
+          title: Rayon de géorepérage par défaut (m)
+        approval_levels:
+          type: integer
+          maximum: 2
+          minimum: 1
+          title: Niveaux de validation
+          description: 1 = manager seul, 2 = manager puis RH (EF-31).
+        wifi_check_enabled:
+          type: boolean
+          title: Contrôle Wi-Fi
+        break_checkins_enabled:
+          type: boolean
+          title: Pointage des pauses
+        retention_checkins_years:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        retention_gps_months:
+          type: integer
+          maximum: 32767
+          minimum: 0
+    PatchedOrgUnitRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          title: Type
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+        manager:
+          type: string
+          format: uuid
+          nullable: true
+    PatchedSiteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        radius_m:
+          type: integer
+          maximum: 5000
+          minimum: 20
+          title: Rayon de géorepérage (m)
+        allowed_wifi:
+          title: Wi-Fi autorisés
+          description: Liste de SSID ou BSSID acceptés comme second facteur.
+        is_active:
+          type: boolean
+    PatchedSubscriptionRequest:
+      type: object
+      properties:
+        company:
+          type: string
+          format: uuid
+        plan:
+          $ref: '#/components/schemas/PlanEnum'
+        max_agents:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_sites:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_kiosks:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/SubscriptionStatusEnum'
+    PatchedUserRequest:
+      type: object
+      description: Accounts managed by the company administrator (EF-40).
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: Identifiant
+          maxLength: 150
+        display_name:
+          type: string
+          title: Nom affiché
+          maxLength: 200
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleEnum'
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+        is_active:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+          minLength: 10
+    PlanEnum:
+      enum:
+      - starter
+      - business
+      - enterprise
+      type: string
+      description: |-
+        * `starter` - Essentiel
+        * `business` - Entreprise
+        * `enterprise` - Grand compte
+    PlatformStats:
+      type: object
+      properties:
+        companies:
+          type: integer
+        active_companies:
+          type: integer
+        agents:
+          type: integer
+        checkins_today:
+          type: integer
+      required:
+      - active_companies
+      - agents
+      - checkins_today
+      - companies
+    RoleEnum:
+      enum:
+      - company_admin
+      - hr
+      - manager
+      - agent
+      - auditor
+      type: string
+      description: |-
+        * `company_admin` - Administrateur entreprise
+        * `hr` - Gestionnaire RH
+        * `manager` - Manager
+        * `agent` - Agent
+        * `auditor` - Auditeur
+    Site:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 120
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        radius_m:
+          type: integer
+          maximum: 5000
+          minimum: 20
+          title: Rayon de géorepérage (m)
+        allowed_wifi:
+          title: Wi-Fi autorisés
+          description: Liste de SSID ou BSSID acceptés comme second facteur.
+        is_active:
+          type: boolean
+        agent_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - agent_count
+      - created_at
+      - id
+      - latitude
+      - longitude
+      - name
+    SiteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom
+          maxLength: 120
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+        radius_m:
+          type: integer
+          maximum: 5000
+          minimum: 20
+          title: Rayon de géorepérage (m)
+        allowed_wifi:
+          title: Wi-Fi autorisés
+          description: Liste de SSID ou BSSID acceptés comme second facteur.
+        is_active:
+          type: boolean
+      required:
+      - latitude
+      - longitude
+      - name
+    StepEnum:
+      enum:
+      - authenticated
+      - mfa_required
+      - mfa_setup
+      type: string
+      description: |-
+        * `authenticated` - authenticated
+        * `mfa_required` - mfa_required
+        * `mfa_setup` - mfa_setup
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        company:
+          type: string
+          format: uuid
+        plan:
+          $ref: '#/components/schemas/PlanEnum'
+        max_agents:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_sites:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_kiosks:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/SubscriptionStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company
+      - created_at
+      - end_date
+      - id
+      - start_date
+    SubscriptionRequest:
+      type: object
+      properties:
+        company:
+          type: string
+          format: uuid
+        plan:
+          $ref: '#/components/schemas/PlanEnum'
+        max_agents:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_sites:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        max_kiosks:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/SubscriptionStatusEnum'
+      required:
+      - company
+      - end_date
+      - start_date
+    SubscriptionStatusEnum:
+      enum:
+      - active
+      - expired
+      - cancelled
+      type: string
+      description: |-
+        * `active` - Actif
+        * `expired` - Expiré
+        * `cancelled` - Résilié
+    User:
+      type: object
+      description: Accounts managed by the company administrator (EF-40).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          title: Identifiant
+          maxLength: 150
+        display_name:
+          type: string
+          title: Nom affiché
+          maxLength: 200
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleEnum'
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - roles
+      - username
+    UserRequest:
+      type: object
+      description: Accounts managed by the company administrator (EF-40).
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: Identifiant
+          maxLength: 150
+        display_name:
+          type: string
+          title: Nom affiché
+          maxLength: 200
+        email:
+          title: E-mail
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleEnum'
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+        is_active:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+          minLength: 10
+      required:
+      - roles
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
