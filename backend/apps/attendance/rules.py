@@ -186,6 +186,9 @@ def compute_day(
 
     # RG-09: public holiday or non-working day — no lateness, no absence; presence is overtime.
     if holiday or not schedule.works:
+        # No planned break on a day that was not planned: every minute present counts.
+        worked, _ = worked_minutes(DaySchedule(works=False), items)
+        result.worked_minutes = worked
         result.status = DayStatus.HOLIDAY if holiday else DayStatus.OFF
         result.overtime_minutes = worked if worked >= schedule.overtime_threshold_min else 0
         result.overtime_validated = (
