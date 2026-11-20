@@ -6,4 +6,4 @@
  * * `service` - Service
  * * `team` - Équipe
  */
-export type KindEnum = 'direction' | 'service' | 'team';
+export type OrgUnitKindEnum = 'direction' | 'service' | 'team';
