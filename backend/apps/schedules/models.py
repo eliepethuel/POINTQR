@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator
 from django.db import models
 
-from common.models import TenantManager, TenantModel, TimeStampedModel
+from common.models import SharedTenantManager, TenantModel, TimeStampedModel
 
 MONDAY_TO_FRIDAY = [0, 1, 2, 3, 4]
 
@@ -114,7 +114,7 @@ class PublicHoliday(TimeStampedModel):
         "travaillé", default=False, help_text="L'entreprise travaille exceptionnellement ce jour."
     )
 
-    objects = TenantManager()
+    objects = SharedTenantManager()
 
     class Meta:
         verbose_name = "jour férié"
