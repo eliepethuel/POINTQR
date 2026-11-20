@@ -1,0 +1,129 @@
+<main class="agent">
+  <header class="top">
+    <span class="brand">Point<span>QR</span></span>
+    <button type="button" class="pq-btn pq-btn-ghost pq-btn-sm" (click)="session.logout()">
+      Se déconnecter
+    </button>
+  </header>
+
+  @if (status.isLoading() && !status.hasValue()) {
+    <p class="muted center">Chargement…</p>
+  } @else if (status.value(); as st) {
+    <h1 class="hello">Bonjour {{ firstName() }}</h1>
+
+    @if (!bound()) {
+      <section class="pq-card activate pq-pop-in">
+        <h2>Activez ce téléphone</h2>
+        <p class="muted">
+          Un seul téléphone peut pointer pour vous. Après activation, un changement de téléphone
+          devra être validé par le service RH.
+        </p>
+        @if (!activationPending()) {
+          <button
+            type="button"
+            class="pq-btn pq-btn-highlight big"
+            (click)="activate()"
+            [disabled]="busy()"
+          >
+            Activer ce téléphone
+          </button>
+        }
+      </section>
+    } @else {
+      <nav class="tabs" aria-label="Sections">
+        <button type="button" [class.on]="tab() === 'scan'" (click)="showTab('scan')">
+          Pointer
+        </button>
+        <button type="button" [class.on]="tab() === 'qr'" (click)="showTab('qr')">Mon QR</button>
+        <button type="button" [class.on]="tab() === 'today'" (click)="showTab('today')">
+          Aujourd'hui
+        </button>
+      </nav>
+
+      @switch (tab()) {
+        @case ('scan') {
+          <section class="scan">
+            <p class="next">
+              Prochain pointage :
+              <strong>{{ st.next_direction === 'in' ? 'entrée' : 'sortie' }}</strong>
+            </p>
+            <pq-qr-scanner (scanned)="onScan($event)" />
+            <p class="hint">
+              Visez le QR code de la borne.
+              <span class="geo">Votre position est lue uniquement au moment du pointage.</span>
+            </p>
+            @if (locating()) {
+              <p class="muted center">Localisation…</p>
+            }
+          </section>
+        }
+        @case ('qr') {
+          <section class="pq-card personal">
+            <p class="muted">
+              Présentez ce QR à la borne si vous n'avez pas de connexion. Il change toutes les
+              {{ windowSeconds }} secondes.
+            </p>
+            @if (personalQr(); as value) {
+              <div class="personal-qr">
+                <pq-qr-canvas [value]="value" label="Mon QR personnel" [pixelSize]="8" />
+              </div>
+            }
+          </section>
+        }
+        @case ('today') {
+          <section class="pq-card">
+            <h2>Pointages du jour</h2>
+            @for (c of st.today; track c.id) {
+              <p class="row">
+                <span class="pq-mono time">{{ c.effective_ts | date: 'HH:mm' }}</span>
+                <span>{{
+                  c.direction === 'in' ? 'Entrée' : c.direction === 'out' ? 'Sortie' : c.direction
+                }}</span>
+                <span class="muted">{{ c.site_name }}</span>
+              </p>
+            } @empty {
+              <p class="muted">Aucun pointage aujourd'hui.</p>
+            }
+          </section>
+        }
+      }
+    }
+  }
+
+  @if (error(); as message) {
+    <p class="pq-error-text center" role="alert">{{ message }}</p>
+  }
+
+  @if (result(); as r) {
+    <div
+      class="result"
+      [class.ok]="r.result === 'accepted'"
+      role="alertdialog"
+      aria-live="assertive"
+      [attr.aria-label]="r.message"
+      (click)="dismiss()"
+      (keydown.escape)="dismiss()"
+    >
+      <div class="result-card pq-pop-in">
+        @if (r.result === 'accepted') {
+          <div class="anim">
+            <pq-lottie src="animations/check.json" />
+            <pq-particle-burst />
+          </div>
+          <p class="time pq-mono">{{ r.effective_ts | date: 'HH:mm' }}</p>
+          <p class="status" [class.late]="r.late_minutes > 0">{{ r.message }}</p>
+          <p class="muted">
+            {{ r.direction === 'in' ? 'Entrée' : 'Sortie' }} enregistrée — heure du serveur
+          </p>
+        } @else {
+          <div class="cross" aria-hidden="true">×</div>
+          <p class="status late">
+            {{ r.result === 'ignored' ? 'Déjà pointé' : 'Pointage refusé' }}
+          </p>
+          <p>{{ r.message }}</p>
+        }
+        <button type="button" class="pq-btn big" (click)="dismiss()">Terminé</button>
+      </div>
+    </div>
+  }
+</main>
