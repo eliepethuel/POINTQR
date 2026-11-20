@@ -1,0 +1,204 @@
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--pq-surface-2);
+  font-size: 0.8125rem;
+  color: var(--pq-text-muted);
+}
+.live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pq-text-muted);
+}
+.live.on .live-dot {
+  background: var(--pq-success);
+}
+.live.on .live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--pq-success);
+  animation: ping 1.8s ease-out infinite;
+}
+@keyframes ping {
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* Bento grid: 4 KPIs on top, then feed / charts / map */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(140px, auto);
+  gap: 16px;
+}
+.kpi {
+  min-height: 140px;
+}
+.kpi .label {
+  margin: 0;
+  color: var(--pq-text-muted);
+  font-size: 0.875rem;
+}
+.kpi .value {
+  margin: 6px 0;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1;
+}
+.kpi .hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--pq-text-muted);
+}
+.present .value {
+  color: var(--pq-success);
+}
+.late .value {
+  color: var(--pq-highlight);
+}
+.absent .value,
+.early .value {
+  color: var(--pq-danger);
+}
+h2 {
+  margin: 0 0 12px;
+  font: 600 1rem var(--pq-font-display);
+}
+.muted {
+  color: var(--pq-text-muted);
+  font-weight: 400;
+  font-size: 0.8125rem;
+}
+.feed {
+  grid-column: span 2;
+  grid-row: span 3;
+  overflow: hidden;
+}
+.chart,
+.ranking {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.map {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.map-box {
+  height: 300px;
+}
+.kiosks {
+  grid-column: span 2;
+}
+.feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 520px;
+  overflow: auto;
+}
+.feed-item {
+  display: grid;
+  grid-template-columns: 12px 48px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pq-surface-2);
+  font-size: 0.875rem;
+}
+.feed-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pq-success);
+}
+.feed-item[data-result='refused'] .dot {
+  background: var(--pq-danger);
+}
+.feed-item[data-result='ignored'] .dot {
+  background: var(--pq-text-muted);
+}
+.feed-item.fresh[data-result='accepted'] {
+  animation: arrive 1.2s var(--pq-ease-out-expo);
+}
+/* Refusals blink coral with their reason */
+.feed-item.fresh[data-result='refused'] {
+  animation: alarm 0.5s ease-in-out 3;
+}
+@keyframes arrive {
+  from {
+    background: rgb(61 220 151 / 0.35);
+  }
+}
+@keyframes alarm {
+  50% {
+    background: rgb(255 107 74 / 0.35);
+  }
+}
+.who {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.what {
+  color: var(--pq-text-muted);
+  font-size: 0.8125rem;
+  text-align: right;
+}
+.feed-item[data-result='refused'] .what {
+  color: var(--pq-danger);
+}
+.empty {
+  color: var(--pq-text-muted);
+}
+.kiosk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.k-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pq-danger);
+}
+.k-dot.on {
+  background: var(--pq-success);
+}
+@media (max-width: 1100px) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .bento {
+    grid-template-columns: 1fr;
+  }
+  .feed,
+  .chart,
+  .ranking,
+  .map,
+  .kiosks {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-item.fresh,
+  .live.on .live-dot::after {
+    animation: none;
+  }
+}

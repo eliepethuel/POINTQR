@@ -1,0 +1,126 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.schedule header,
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--pq-font-display);
+}
+h3 {
+  font-size: 1.05rem;
+}
+.hours {
+  margin: 10px 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.days {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 10px;
+}
+.days span {
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: var(--pq-surface-2);
+  color: var(--pq-text-muted);
+}
+.days span.on {
+  background: rgb(124 92 255 / 0.18);
+  color: var(--pq-text);
+}
+.muted {
+  margin: 0 0 12px;
+  color: var(--pq-text-muted);
+  font-size: 0.8125rem;
+}
+.year {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.months {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.month {
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--pq-surface-2);
+  min-height: 90px;
+}
+.m-name {
+  margin: 0 0 8px;
+  font: 600 0.8125rem var(--pq-font-mono);
+  text-transform: uppercase;
+  color: var(--pq-text-muted);
+}
+.holiday {
+  margin: 4px 0;
+  font-size: 0.875rem;
+}
+.holiday .pq-mono {
+  color: var(--pq-highlight);
+  font-weight: 700;
+}
+.holiday.own .pq-mono {
+  color: var(--pq-accent);
+}
+.x {
+  border: 0;
+  background: none;
+  color: var(--pq-danger);
+  cursor: pointer;
+}
+.add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.add .pq-input {
+  max-width: 260px;
+}
+.form {
+  display: grid;
+  gap: 14px;
+}
+.weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.weekdays legend {
+  width: 100%;
+  margin-bottom: 6px;
+}
+.weekdays button {
+  min-width: 48px;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--pq-border);
+  background: var(--pq-surface);
+  color: var(--pq-text-muted);
+  cursor: pointer;
+  transition: transform var(--pq-dur-fast) var(--pq-ease-out-back);
+}
+.weekdays button.on {
+  background: var(--pq-accent);
+  color: var(--pq-accent-contrast);
+  transform: translateY(-2px);
+}

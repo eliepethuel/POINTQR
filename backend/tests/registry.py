@@ -70,3 +70,56 @@ def _late_registry() -> None:
 
 
 _late_registry()
+
+
+def _phase3_registry() -> None:
+    from datetime import date
+
+    from apps.attendance.models import Period, WorkDay
+    from apps.notifications.models import Notification
+    from apps.schedules.models import PublicHoliday, Schedule, ScheduleAssignment, ScheduleException
+    from apps.tenancy.context import tenant_context
+
+    def workday(company: Company) -> Any:
+        agent = factories.AgentFactory(company=company)
+        with tenant_context(company.id):
+            return WorkDay.objects.create(agent=agent, date=date(2026, 11, 16), status="present")
+
+    months = iter(range(1, 10_000))
+
+    def period(company: Company) -> Any:
+        n = next(months)
+        with tenant_context(company.id):
+            return Period.objects.create(month=date(2000 + n // 12, n % 12 + 1, 1))
+
+    def assignment(company: Company) -> Any:
+        return factories.ScheduleAssignmentFactory(
+            company=company,
+            agent=factories.AgentFactory(company=company),
+            schedule=factories.ScheduleFactory(company=company),
+        )
+
+    def exception(company: Company) -> Any:
+        return factories.ScheduleExceptionFactory(
+            company=company, schedule=factories.ScheduleFactory(company=company)
+        )
+
+    def notification(company: Company) -> Any:
+        user = factories.make_user(company, "agent")
+        with tenant_context(company.id):
+            return Notification.objects.create(user=user, kind="request", title="Test")
+
+    FACTORIES.update(
+        {
+            WorkDay: workday,
+            Period: period,
+            Schedule: lambda c: factories.ScheduleFactory(company=c),
+            ScheduleAssignment: assignment,
+            ScheduleException: exception,
+            PublicHoliday: lambda c: factories.HolidayFactory(company=c),
+            Notification: notification,
+        }
+    )
+
+
+_phase3_registry()

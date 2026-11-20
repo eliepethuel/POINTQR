@@ -1,0 +1,205 @@
+<pq-page-header
+  title="Horaires et calendrier"
+  eyebrow="Organisation"
+  subtitle="Le retard se compte depuis l'heure prévue, une fois la tolérance dépassée."
+>
+  @if (canEdit()) {
+    <button type="button" class="pq-btn pq-btn-primary" (click)="edit()">Nouvel horaire</button>
+  }
+</pq-page-header>
+
+<section class="grid">
+  @for (s of schedules.value()?.results ?? []; track s.id; let i = $index) {
+    <article class="pq-card schedule" pqRevealOnScroll [revealIndex]="i">
+      <header>
+        <h3>{{ s.name }}</h3>
+        @if (night(s)) {
+          <span class="pq-badge pq-badge-accent">nuit</span>
+        }
+      </header>
+      <p class="hours pq-mono">{{ s.start_time?.slice(0, 5) }} → {{ s.end_time?.slice(0, 5) }}</p>
+      <p class="days">
+        @for (d of days; track d; let n = $index) {
+          <span [class.on]="(s.weekdays ?? []).includes(n)">{{ d }}</span>
+        }
+      </p>
+      <p class="muted">
+        Tolérance {{ s.late_tolerance_min }} min · pause {{ s.break_minutes }} min ·
+        {{ s.agent_count }} agents
+      </p>
+      @if (canEdit()) {
+        <button type="button" class="pq-btn pq-btn-sm" (click)="edit(s)">Modifier</button>
+      }
+    </article>
+  }
+</section>
+
+<section class="pq-card calendar">
+  <header class="cal-head">
+    <h2>Jours fériés</h2>
+    <div class="year">
+      <button
+        type="button"
+        class="pq-btn pq-btn-sm"
+        (click)="year.set(year() - 1)"
+        aria-label="Année précédente"
+      >
+        ‹
+      </button>
+      <strong class="pq-mono">{{ year() }}</strong>
+      <button
+        type="button"
+        class="pq-btn pq-btn-sm"
+        (click)="year.set(year() + 1)"
+        aria-label="Année suivante"
+      >
+        ›
+      </button>
+    </div>
+  </header>
+  <div class="months">
+    @for (list of byMonth(); track $index; let m = $index) {
+      <div class="month" pqRevealOnScroll [revealIndex]="m">
+        <p class="m-name">{{ months[m] }}</p>
+        @for (h of list; track h.id) {
+          <p class="holiday" [class.own]="!h.national">
+            <span class="pq-mono">{{ h.date | date: 'dd' }}</span> {{ h.label }}
+            @if (!h.national && canEdit()) {
+              <button
+                type="button"
+                class="x"
+                (click)="removeHoliday(h)"
+                [attr.aria-label]="'Supprimer ' + h.label"
+              >
+                ×
+              </button>
+            }
+          </p>
+        }
+      </div>
+    }
+  </div>
+  @if (canEdit()) {
+    <form class="add" (ngSubmit)="addHoliday()">
+      <input
+        class="pq-input"
+        type="date"
+        name="date"
+        [(ngModel)]="newHoliday.date"
+        required
+        aria-label="Date"
+      />
+      <input
+        class="pq-input"
+        name="label"
+        [(ngModel)]="newHoliday.label"
+        required
+        placeholder="Jour propre à l'entreprise"
+        aria-label="Libellé"
+      />
+      <button type="submit" class="pq-btn" [disabled]="!newHoliday.date || !newHoliday.label">
+        Ajouter
+      </button>
+    </form>
+    <p class="pq-hint">
+      Les fêtes musulmanes sont fixées chaque année par décret : vérifiez les dates indicatives.
+    </p>
+  }
+</section>
+
+<pq-drawer
+  [open]="!!draft()"
+  [title]="draft()?.id ? 'Modifier l’horaire' : 'Nouvel horaire'"
+  (closed)="draft.set(null)"
+>
+  @if (draft(); as d) {
+    <form class="form" (ngSubmit)="save()">
+      <label class="pq-field"
+        ><span class="pq-label">Nom</span>
+        <input
+          class="pq-input"
+          name="name"
+          required
+          [ngModel]="d.name"
+          (ngModelChange)="patch({ name: $event })"
+      /></label>
+      <fieldset class="weekdays">
+        <legend class="pq-label">Jours travaillés</legend>
+        @for (day of days; track day; let n = $index) {
+          <button
+            type="button"
+            [class.on]="d.weekdays.includes(n)"
+            (click)="toggleDay(n)"
+            [attr.aria-pressed]="d.weekdays.includes(n)"
+          >
+            {{ day }}
+          </button>
+        }
+      </fieldset>
+      <div class="pq-grid-2">
+        <label class="pq-field"
+          ><span class="pq-label">Arrivée</span>
+          <input
+            class="pq-input pq-mono"
+            type="time"
+            name="start"
+            [ngModel]="d.start_time"
+            (ngModelChange)="patch({ start_time: $event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Départ</span>
+          <input
+            class="pq-input pq-mono"
+            type="time"
+            name="end"
+            [ngModel]="d.end_time"
+            (ngModelChange)="patch({ end_time: $event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Tolérance de retard (min)</span>
+          <input
+            class="pq-input"
+            type="number"
+            min="0"
+            max="240"
+            name="late"
+            [ngModel]="d.late_tolerance_min"
+            (ngModelChange)="patch({ late_tolerance_min: +$event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Tolérance de départ (min)</span>
+          <input
+            class="pq-input"
+            type="number"
+            min="0"
+            max="240"
+            name="early"
+            [ngModel]="d.early_tolerance_min"
+            (ngModelChange)="patch({ early_tolerance_min: +$event })"
+        /></label>
+        <label class="pq-field"
+          ><span class="pq-label">Pause (min)</span>
+          <input
+            class="pq-input"
+            type="number"
+            min="0"
+            max="240"
+            name="break"
+            [ngModel]="d.break_minutes"
+            (ngModelChange)="patch({ break_minutes: +$event })"
+        /></label>
+      </div>
+      <p class="pq-hint">
+        Un départ avant l'arrivée (ex. 20:00 → 06:00) crée un poste de nuit, rattaché à son jour de
+        début.
+      </p>
+      <button
+        type="submit"
+        class="pq-btn pq-btn-primary"
+        [disabled]="!d.name || !d.weekdays.length"
+      >
+        Enregistrer
+      </button>
+    </form>
+  }
+</pq-drawer>

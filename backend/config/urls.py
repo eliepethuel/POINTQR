@@ -3,9 +3,12 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts import views as accounts
+from apps.attendance import days_views
 from apps.attendance import views as attendance
 from apps.kiosks import views as kiosks
+from apps.notifications import views as notifications
 from apps.organization import views as organization
+from apps.schedules import views as schedules
 from apps.tenancy import views as tenancy
 
 router = DefaultRouter(trailing_slash=True)
@@ -19,6 +22,13 @@ router.register(
 )
 router.register("kiosks", kiosks.KioskViewSet, basename="kiosk")
 router.register("checkins", attendance.CheckInViewSet, basename="checkin")
+router.register("workdays", days_views.WorkDayViewSet, basename="workday")
+router.register("periods", days_views.PeriodViewSet, basename="period")
+router.register("schedules", schedules.ScheduleViewSet, basename="schedule")
+router.register("schedule-assignments", schedules.AssignmentViewSet, basename="schedule-assignment")
+router.register("schedule-exceptions", schedules.ExceptionViewSet, basename="schedule-exception")
+router.register("holidays", schedules.HolidayViewSet, basename="holiday")
+router.register("notifications", notifications.NotificationViewSet, basename="notification")
 router.register("platform/companies", tenancy.CompanyViewSet, basename="platform-company")
 router.register(
     "platform/subscriptions", tenancy.SubscriptionViewSet, basename="platform-subscription"
@@ -37,6 +47,7 @@ api_v1: list[URLPattern | URLResolver] = [
     path("auth/", include((auth_urls, "auth"))),
     path("settings/company/", tenancy.CompanySettingsView.as_view(), name="company-settings"),
     path("platform/stats/", tenancy.PlatformStatsView.as_view(), name="platform-stats"),
+    path("dashboard/today/", days_views.DashboardView.as_view(), name="dashboard-today"),
     path("kiosk/pair/", kiosks.KioskPairView.as_view(), name="kiosk-pair"),
     path("kiosk/heartbeat/", kiosks.KioskHeartbeatView.as_view(), name="kiosk-heartbeat"),
     path("kiosk/checkins/", kiosks.KioskCheckInView.as_view(), name="kiosk-checkin"),

@@ -1,6 +1,7 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
   type ApplicationConfig,
+  LOCALE_ID,
   inject,
   isDevMode,
   provideAppInitializer,
@@ -25,6 +26,8 @@ import { MotionService } from './shared/motion/motion-service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // French dates and numbers everywhere (« lundi 16 novembre 2026 »).
+    { provide: LOCALE_ID, useValue: 'fr-FR' },
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, kioskInterceptor])),
     // Offline shell for the agent PWA and the kiosk (production builds only).
     provideServiceWorker('ngsw-worker.js', {

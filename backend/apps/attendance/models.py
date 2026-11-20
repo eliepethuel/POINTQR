@@ -3,7 +3,7 @@
 from django.db import models
 from django.db.models import Q
 
-from common.models import TenantAppendOnlyModel
+from common.models import TenantAppendOnlyModel, TenantModel
 
 
 class Direction(models.TextChoices):
@@ -111,3 +111,72 @@ class CheckIn(TenantAppendOnlyModel):
 
     def __str__(self) -> str:
         return f"{self.agent} {self.get_direction_display()} {self.effective_ts:%Y-%m-%d %H:%M}"
+
+
+class WorkDay(TenantModel):
+    """Computed view of one agent's day, recomputable at any time from the check-ins (CDC §10)."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "En cours"
+        PRESENT = "present", "Présent"
+        LATE = "late", "En retard"
+        LATE_JUSTIFIED = "late_justified", "Retard justifié"
+        ABSENT = "absent", "Absent"
+        ABSENT_JUSTIFIED = "absent_justified", "Absence justifiée"
+        INCOMPLETE = "incomplete", "Incomplète"
+        HOLIDAY = "holiday", "Jour férié"
+        OFF = "off", "Non travaillé"
+
+    agent = models.ForeignKey(
+        "organization.Agent", on_delete=models.CASCADE, related_name="workdays"
+    )
+    date = models.DateField(db_index=True)
+    status = models.CharField(max_length=20, choices=Status.choices)
+    first_in = models.DateTimeField(null=True, blank=True)
+    last_out = models.DateTimeField(null=True, blank=True)
+    planned_start = models.DateTimeField(null=True, blank=True)
+    planned_end = models.DateTimeField(null=True, blank=True)
+    late_minutes = models.PositiveIntegerField(default=0)
+    early_leave_minutes = models.PositiveIntegerField(default=0)
+    worked_minutes = models.PositiveIntegerField(default=0)
+    overtime_minutes = models.PositiveIntegerField(default=0)
+    overtime_validated = models.BooleanField(default=False)
+    incomplete = models.BooleanField(default=False)
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "journée"
+        ordering = ["-date"]
+        constraints = [
+            models.UniqueConstraint(fields=["agent", "date"], name="workday_unique_agent_date")
+        ]
+        indexes = [models.Index(fields=["company", "date", "status"])]
+
+    def __str__(self) -> str:
+        return f"{self.agent} {self.date} {self.get_status_display()}"
+
+
+class Period(TenantModel):
+    """A month handed over to payroll: closed periods can no longer change (RG-14)."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Ouverte"
+        CLOSED = "closed", "Clôturée"
+
+    month = models.DateField(help_text="Premier jour du mois")
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.OPEN)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    reopen_reason = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "période"
+        ordering = ["-month"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "month"], name="period_unique_month")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.month:%m/%Y} ({self.get_status_display()})"

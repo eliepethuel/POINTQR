@@ -1,0 +1,99 @@
+<pq-page-header
+  title="Tableau de bord"
+  [eyebrow]="session.company()?.legal_name ?? ''"
+  [subtitle]="(data.value()?.date | date: 'EEEE d MMMM y') ?? ''"
+>
+  <span class="live" [class.on]="socket.connected()" role="status">
+    <span class="live-dot" aria-hidden="true"></span
+    >{{ socket.connected() ? 'En direct' : 'Connexion…' }}
+  </span>
+</pq-page-header>
+
+@if (kpis(); as k) {
+  <div class="bento">
+    <article class="pq-card kpi present" pqSpotlight pqRevealOnScroll [revealIndex]="0">
+      <p class="label">Présents</p>
+      <p class="value pq-mono" [pqCountUp]="k.present"></p>
+      <p class="hint">sur {{ k.expected }} attendus · {{ k.on_site }} sur site</p>
+    </article>
+    <article class="pq-card kpi late" pqSpotlight pqRevealOnScroll [revealIndex]="1">
+      <p class="label">En retard</p>
+      <p class="value pq-mono" [pqCountUp]="k.late"></p>
+      <p class="hint">
+        ponctualité <strong class="pq-mono">{{ punctuality() }} %</strong>
+      </p>
+    </article>
+    <article class="pq-card kpi absent" pqSpotlight pqRevealOnScroll [revealIndex]="2">
+      <p class="label">Absents</p>
+      <p class="value pq-mono" [pqCountUp]="k.absent"></p>
+      <p class="hint">attendus et pas encore arrivés</p>
+    </article>
+    <article class="pq-card kpi early" pqSpotlight pqRevealOnScroll [revealIndex]="3">
+      <p class="label">Partis tôt</p>
+      <p class="value pq-mono" [pqCountUp]="k.left_early"></p>
+      <p class="hint">
+        <a routerLink="/app/pointages">{{ k.anomalies }} anomalie(s) de fraude</a>
+      </p>
+    </article>
+
+    <section class="pq-card feed" pqRevealOnScroll [revealIndex]="4" aria-labelledby="feed-title">
+      <h2 id="feed-title">Flux en direct</h2>
+      <ol class="feed-list" #feedList aria-live="polite">
+        @for (item of feedItems(); track item.id) {
+          <li class="feed-item" [class.fresh]="item.fresh" [attr.data-result]="item.result">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="time pq-mono">{{ item.at | date: 'HH:mm' }}</span>
+            <span class="who">{{ item.agent_name }}</span>
+            <span class="what">
+              @if (item.result === 'accepted') {
+                {{ item.direction === 'in' ? 'Entrée' : 'Sortie' }} · {{ item.site }}
+              } @else if (item.result === 'refused') {
+                {{ refusalLabels[item.refusal_code] ?? 'Refusé' }}
+              } @else {
+                Doublon ignoré
+              }
+            </span>
+          </li>
+        } @empty {
+          <li class="empty">Aucun pointage aujourd'hui pour l'instant.</li>
+        }
+      </ol>
+    </section>
+
+    <section class="pq-card chart" pqRevealOnScroll [revealIndex]="5">
+      <h2>Arrivées par heure</h2>
+      <pq-echart [options]="arrivalsChart()" label="Nombre d'entrées par heure" />
+    </section>
+
+    <section class="pq-card ranking" pqRevealOnScroll [revealIndex]="6">
+      <h2>Ponctualité des services <span class="muted">(30 jours)</span></h2>
+      <pq-echart [options]="unitsChart()" label="Taux de ponctualité par service" />
+    </section>
+
+    <section class="pq-card map" pqRevealOnScroll [revealIndex]="7">
+      <h2>Sites</h2>
+      <div class="map-box"><pq-site-map [sites]="mapSites()" /></div>
+    </section>
+
+    <section class="pq-card kiosks" pqRevealOnScroll [revealIndex]="8">
+      <h2>Bornes</h2>
+      @for (kiosk of data.value()?.kiosks ?? []; track kiosk.id) {
+        <p class="kiosk">
+          <span class="k-dot" [class.on]="kiosk.online" aria-hidden="true"></span>
+          {{ kiosk.name }}
+          @if (kiosk.pending) {
+            <span class="pq-badge pq-badge-highlight">{{ kiosk.pending }} en attente</span>
+          }
+        </p>
+      } @empty {
+        <p class="muted">Aucune borne. <a routerLink="/app/bornes">Appairer une tablette</a></p>
+      }
+    </section>
+  </div>
+} @else {
+  <div class="bento">
+    @for (i of [0, 1, 2, 3]; track i) {
+      <div class="pq-card kpi pq-shimmer"></div>
+    }
+  </div>
+}
