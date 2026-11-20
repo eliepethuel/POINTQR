@@ -1,0 +1,82 @@
+<pq-page-header
+  title="Importer des agents"
+  eyebrow="Organisation"
+  subtitle="Colonnes attendues : matricule, nom, prénoms, puis fonction, téléphone, e-mail, site, unité."
+>
+  <button type="button" class="pq-btn" (click)="downloadTemplate()">Télécharger le modèle</button>
+  <a class="pq-btn pq-btn-ghost" routerLink="/app/agents">Retour aux agents</a>
+</pq-page-header>
+
+<label
+  class="drop"
+  [class.dragging]="dragging()"
+  (dragover)="$event.preventDefault(); dragging.set(true)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <input type="file" accept=".xlsx,.csv" class="sr-only" (change)="onPick($event)" />
+  <span class="drop-ring" aria-hidden="true"></span>
+  <span class="drop-title">{{ file()?.name ?? 'Déposez votre fichier Excel ou CSV ici' }}</span>
+  <span class="drop-hint">ou cliquez pour le choisir · 5 000 lignes maximum</span>
+</label>
+
+@if (busy() || progress() > 0) {
+  <div
+    class="liquid"
+    role="progressbar"
+    aria-label="Progression de l'envoi"
+    [attr.aria-valuenow]="progress()"
+    aria-valuemin="0"
+    aria-valuemax="100"
+  >
+    <div class="liquid-fill" [style.transform]="'translateX(' + (progress() - 100) + '%)'">
+      <svg class="wave" viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 6 Q 15 0 30 6 T 60 6 T 90 6 T 120 6 V12 H0Z" />
+      </svg>
+    </div>
+    <span class="liquid-label pq-mono">{{ progress() }} %</span>
+  </div>
+}
+
+@if (report(); as r) {
+  <section class="pq-card result pq-pop-in" aria-live="polite">
+    <div class="stats">
+      <p><strong class="pq-mono" [pqCountUp]="r.total"></strong> lignes lues</p>
+      <p>
+        <strong class="pq-mono ok" [pqCountUp]="r.created"></strong>
+        {{ r.dry_run ? 'à créer' : 'créés' }}
+      </p>
+      <p>
+        <strong class="pq-mono ok" [pqCountUp]="r.updated"></strong>
+        {{ r.dry_run ? 'à mettre à jour' : 'mis à jour' }}
+      </p>
+      <p><strong class="pq-mono ko" [pqCountUp]="r.line_errors.length"></strong> erreurs</p>
+    </div>
+
+    @if (r.line_errors.length) {
+      <p class="pq-error-text">
+        Corrigez ces lignes puis déposez à nouveau le fichier : rien n'a été enregistré.
+      </p>
+      <ol class="errors">
+        @for (e of r.line_errors; track $index) {
+          <li class="error-line" [style.animation-delay.ms]="$index * 40">
+            <span class="pq-badge pq-badge-danger pq-mono">ligne {{ e.line }}</span>
+            <span class="field">{{ e.field }}</span>
+            <span>{{ e.message }}</span>
+          </li>
+        }
+      </ol>
+    } @else if (r.dry_run) {
+      <button
+        type="button"
+        class="pq-btn pq-btn-highlight"
+        (click)="send(false)"
+        [disabled]="busy()"
+      >
+        Confirmer l'import de {{ r.created + r.updated }} agents
+      </button>
+    } @else {
+      <a class="pq-btn pq-btn-primary" routerLink="/app/agents">Voir les agents</a>
+    }
+  </section>
+}
