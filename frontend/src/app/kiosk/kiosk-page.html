@@ -1,0 +1,92 @@
+<main class="kiosk pq-grain">
+  <div class="pq-aurora" aria-hidden="true"></div>
+
+  @if (!session.loaded()) {
+    <p class="loading">Démarrage de la borne…</p>
+  } @else if (!session.paired()) {
+    <section class="pair pq-glass pq-pop-in" aria-labelledby="pair-title">
+      @if (session.revoked()) {
+        <p class="pq-badge pq-badge-danger">Cette borne a été révoquée par l'administrateur.</p>
+      }
+      <h1 id="pair-title">Appairer cette borne</h1>
+      <p class="lead">
+        Dans le back-office (Bornes → Nouvelle borne), générez un code d'appairage, puis
+        saisissez-le ici avec le code de l'entreprise.
+      </p>
+      <label class="pq-field">
+        <span class="pq-label">Code entreprise</span>
+        <input
+          class="pq-input pq-mono"
+          name="company"
+          [(ngModel)]="companyCode"
+          maxlength="12"
+          autocomplete="off"
+        />
+      </label>
+      <span class="pq-label">Code d'appairage à 6 chiffres</span>
+      <pq-otp-input [disabled]="pairing() || !companyCode" (completed)="pair($event)" />
+      @if (pairError(); as message) {
+        <p class="pq-error-text" role="alert">{{ message }}</p>
+      }
+    </section>
+  } @else {
+    @if (session.config(); as cfg) {
+      <header class="head">
+        <div>
+          <p class="company">{{ cfg.company.legal_name }}</p>
+          <h1 class="site">{{ cfg.site.name }}</h1>
+        </div>
+        <time class="clock pq-mono">{{ clock() }}</time>
+      </header>
+
+      <section class="stage">
+        <div class="qr-wrap">
+          @if (token(); as value) {
+            <pq-qr-canvas
+              [value]="value"
+              label="QR code de pointage, renouvelé toutes les 30 secondes"
+            />
+          }
+          <pq-countdown-ring [fraction]="fraction()" [remaining]="remaining()" />
+        </div>
+        <aside class="side">
+          <p class="instruction">Scannez ce code avec l'application PointQR</p>
+          <p class="sub">Sans smartphone ? Présentez votre badge ou votre QR personnel.</p>
+          @if (scanning()) {
+            <div class="scanner"><pq-qr-scanner [compact]="true" (scanned)="onScan($event)" /></div>
+            <button type="button" class="pq-btn" (click)="scanning.set(false)">
+              Fermer le lecteur de badge
+            </button>
+          } @else {
+            <button type="button" class="pq-btn pq-btn-highlight big" (click)="scanning.set(true)">
+              Scanner un badge
+            </button>
+          }
+        </aside>
+      </section>
+
+      @if (!session.online() || session.pending() > 0) {
+        <div class="offline" role="status">
+          <span class="dot" aria-hidden="true"></span>
+          @if (!session.online()) {
+            Hors-ligne : le QR continue de fonctionner.
+          }
+          @if (session.pending() > 0) {
+            <strong class="pq-mono">{{ session.pending() }}</strong> pointage(s) en attente de
+            synchronisation
+          }
+        </div>
+      }
+    }
+  }
+
+  @if (flash(); as f) {
+    <div class="flash" [attr.data-kind]="f.kind" role="alert">
+      <span class="wave" aria-hidden="true"></span>
+      <div class="flash-card">
+        <p class="flash-title">{{ f.title }}</p>
+        <p class="flash-detail">{{ f.detail }}</p>
+      </div>
+    </div>
+  }
+</main>
