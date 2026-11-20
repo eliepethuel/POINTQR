@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../../api/api';
 import { orgUnitsCreate } from '../../api/fn/org-units/org-units-create';
 import { orgUnitsTree } from '../../api/fn/org-units/org-units-tree';
-import type { KindEnum } from '../../api/models/kind-enum';
+import type { OrgUnitKindEnum as KindEnum } from '../../api/models/org-unit-kind-enum';
 import type { OrgTreeNode } from '../../api/models/org-tree-node';
 import { Session } from '../../core/auth/session';
 import { problemMessage } from '../../core/http/problem';
