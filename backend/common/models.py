@@ -59,6 +59,35 @@ class TenantModel(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
+class TenantAppendOnlyModel(models.Model):
+    """Tenant row that is only ever inserted (check-ins): no ``updated_at`` on purpose."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(
+        "tenancy.Company", on_delete=models.PROTECT, related_name="+", editable=False
+    )
+    created_at = models.DateTimeField("enregistré le", auto_now_add=True, db_index=True)
+
+    objects: ClassVar[TenantManager] = TenantManager()
+    unscoped: ClassVar[models.Manager[Any]] = models.Manager()
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise PermissionError(f"{type(self).__name__} is append-only.")
+        if self.company_id is None:
+            company_id = current_company_id()
+            if company_id is None:
+                raise ImproperlyConfigured(f"{type(self).__name__} saved outside a tenant context.")
+            self.company_id = company_id
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        raise PermissionError(f"{type(self).__name__} is append-only.")
+
+
 class AppendOnlyModel(models.Model):
     """Rows that are never updated nor deleted (CheckIn, AuditLog). Enforced by a DB trigger too."""
 
