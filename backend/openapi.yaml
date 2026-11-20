@@ -271,6 +271,72 @@ paths:
                 type: string
                 format: binary
           description: ''
+  /api/v1/audit-logs/:
+    get:
+      operationId: audit_logs_list
+      description: 'Read-only audit trail (EF-41): nobody can edit or delete an entry,
+        not even the admin.'
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+      - name: cursor
+        required: false
+        in: query
+        description: La valeur du curseur de pagination.
+        schema:
+          type: string
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: object_id
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - audit-logs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/audit-logs/{id}/:
+    get:
+      operationId: audit_logs_retrieve
+      description: 'Read-only audit trail (EF-41): nobody can edit or delete an entry,
+        not even the admin.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) entrée du journal d'audit.
+        required: true
+      tags:
+      - audit-logs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+          description: ''
   /api/v1/auth/login/:
     post:
       operationId: auth_login
@@ -418,6 +484,28 @@ paths:
         required: true
       tags:
       - checkins
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+          description: ''
+  /api/v1/corrections/:
+    post:
+      operationId: checkins_correct
+      description: 'HR corrects or adds a check-in: the original is kept, the change
+        is audited (R7).'
+      tags:
+      - corrections
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionRequest'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -594,6 +682,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/files/:
+    get:
+      operationId: files_download
+      parameters:
+      - in: query
+        name: t
+        schema:
+          type: string
+        required: true
+      tags:
+      - files
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/v1/health/:
     get:
@@ -989,6 +1098,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PairingCode'
+          description: ''
+  /api/v1/me/export/:
+    get:
+      operationId: me_export
+      description: Full personal history as CSV (data portability).
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/me/history/:
+    get:
+      operationId: me_history
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyHistory'
           description: ''
   /api/v1/mobile/activate/:
     post:
@@ -1774,6 +1924,377 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/report-schedules/:
+    get:
+      operationId: report_schedules_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - report-schedules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReportScheduleList'
+          description: ''
+    post:
+      operationId: report_schedules_create
+      tags:
+      - report-schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportScheduleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSchedule'
+          description: ''
+  /api/v1/report-schedules/{id}/:
+    get:
+      operationId: report_schedules_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) rapport programmé.
+        required: true
+      tags:
+      - report-schedules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSchedule'
+          description: ''
+    put:
+      operationId: report_schedules_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) rapport programmé.
+        required: true
+      tags:
+      - report-schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportScheduleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSchedule'
+          description: ''
+    patch:
+      operationId: report_schedules_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) rapport programmé.
+        required: true
+      tags:
+      - report-schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReportScheduleRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSchedule'
+          description: ''
+    delete:
+      operationId: report_schedules_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) rapport programmé.
+        required: true
+      tags:
+      - report-schedules
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/reports/:
+    get:
+      operationId: reports_list
+      description: Requesting a report starts a Celery job; the page polls its progress
+        (EF-34 to EF-36).
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReportJobList'
+          description: ''
+    post:
+      operationId: reports_create
+      description: Requesting a report starts a Celery job; the page polls its progress
+        (EF-34 to EF-36).
+      tags:
+      - reports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportJobRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+          description: ''
+  /api/v1/reports/{id}/:
+    get:
+      operationId: reports_retrieve
+      description: Requesting a report starts a Celery job; the page polls its progress
+        (EF-34 to EF-36).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) rapport.
+        required: true
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+          description: ''
+  /api/v1/requests/:
+    get:
+      operationId: requests_list
+      description: 'Justifications, corrections and overtime: agents see theirs, managers
+        their teams, HR all.'
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRequestList'
+          description: ''
+    post:
+      operationId: requests_create
+      description: 'Justifications, corrections and overtime: agents see theirs, managers
+        their teams, HR all.'
+      tags:
+      - requests
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RequestCreateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+  /api/v1/requests/{id}/:
+    get:
+      operationId: requests_retrieve
+      description: 'Justifications, corrections and overtime: agents see theirs, managers
+        their teams, HR all.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande.
+        required: true
+      tags:
+      - requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+  /api/v1/requests/{id}/cancel/:
+    post:
+      operationId: requests_cancel
+      description: 'Justifications, corrections and overtime: agents see theirs, managers
+        their teams, HR all.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande.
+        required: true
+      tags:
+      - requests
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+  /api/v1/requests/{id}/decide/:
+    post:
+      operationId: requests_decide
+      description: 'Justifications, corrections and overtime: agents see theirs, managers
+        their teams, HR all.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) demande.
+        required: true
+      tags:
+      - requests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecideRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
   /api/v1/schedule-assignments/:
     get:
       operationId: schedule_assignments_list
@@ -2881,6 +3402,58 @@ components:
       - end_date
       - schedule
       - start_date
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        actor_label:
+          type: string
+          readOnly: true
+          title: Acteur
+        action:
+          type: string
+          readOnly: true
+        object_type:
+          type: string
+          readOnly: true
+        object_id:
+          type: string
+          readOnly: true
+        object_label:
+          type: string
+          readOnly: true
+        before:
+          readOnly: true
+          nullable: true
+        after:
+          readOnly: true
+          nullable: true
+        ip:
+          type: string
+          readOnly: true
+          nullable: true
+        user_agent:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor_label
+      - after
+      - before
+      - created_at
+      - id
+      - ip
+      - object_id
+      - object_label
+      - object_type
+      - user_agent
     AuthResponse:
       type: object
       description: Either tokens (step=authenticated) or an MFA challenge.
@@ -2958,6 +3531,9 @@ components:
       - accepted
       - items
       - received
+    BlankEnum:
+      enum:
+      - ''
     CheckIn:
       type: object
       properties:
@@ -3394,6 +3970,31 @@ components:
       description: |-
         * `active` - Active
         * `suspended` - Suspendue
+    CorrectionRequest:
+      type: object
+      properties:
+        checkin:
+          type: string
+          format: uuid
+          nullable: true
+          description: Pointage à corriger ; vide = ajouter un pointage oublié.
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+        effective_ts:
+          type: string
+          format: date-time
+        direction:
+          $ref: '#/components/schemas/DirectionEnum'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+      - direction
+      - effective_ts
+      - reason
     Dashboard:
       type: object
       properties:
@@ -3434,6 +4035,48 @@ components:
       - server_time
       - sites
       - units
+    DecideRequest:
+      type: object
+      properties:
+        approve:
+          type: boolean
+        comment:
+          type: string
+          maxLength: 1000
+      required:
+      - approve
+    Decision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          readOnly: true
+        approved:
+          type: boolean
+          readOnly: true
+        comment:
+          type: string
+          readOnly: true
+        decided_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - approved
+      - comment
+      - created_at
+      - decided_by_name
+      - id
+      - level
     Device:
       type: object
       properties:
@@ -3599,6 +4242,14 @@ components:
       - name
       - schedule
       - start_date
+    FrequencyEnum:
+      enum:
+      - weekly
+      - monthly
+      type: string
+      description: |-
+        * `weekly` - Chaque lundi (semaine écoulée)
+        * `monthly` - Chaque fin de mois
     Health:
       type: object
       properties:
@@ -3864,6 +4515,14 @@ components:
       description: |-
         * `active` - Active
         * `revoked` - Révoquée
+    LevelEnum:
+      enum:
+      - manager
+      - hr
+      type: string
+      description: |-
+        * `manager` - Manager
+        * `hr` - RH
     LoginRequest:
       type: object
       properties:
@@ -3996,6 +4655,20 @@ components:
         * `B` - QR personnel scanné par la borne
         * `C` - Badge imprimé
         * `D` - QR du site sans borne
+    MyHistory:
+      type: object
+      properties:
+        workdays:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkDay'
+        checkins:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckIn'
+      required:
+      - checkins
+      - workdays
     Notification:
       type: object
       properties:
@@ -4265,6 +4938,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Assignment'
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
     PaginatedCheckInList:
       type: object
       required:
@@ -4468,6 +5160,75 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Period'
+    PaginatedReportJobList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportJob'
+    PaginatedReportScheduleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportSchedule'
+    PaginatedRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Request'
     PaginatedScheduleList:
       type: object
       required:
@@ -4885,6 +5646,17 @@ components:
           type: string
           format: uuid
           nullable: true
+    PatchedReportScheduleRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ReportKindEnum'
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        recipients:
+          description: Adresses e-mail
+        is_active:
+          type: boolean
     PatchedScheduleRequest:
       type: object
       properties:
@@ -5226,6 +5998,309 @@ components:
           minLength: 5
       required:
       - reason
+    ReportJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ReportKindEnum'
+        start:
+          type: string
+          format: date
+          nullable: true
+        end:
+          type: string
+          format: date
+          nullable: true
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ReportJobStatusEnum'
+          readOnly: true
+        progress:
+          type: integer
+          readOnly: true
+        filename:
+          type: string
+          readOnly: true
+        error:
+          type: string
+          readOnly: true
+        download_url:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+        finished_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        duration_ms:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - download_url
+      - duration_ms
+      - error
+      - filename
+      - finished_at
+      - id
+      - kind
+      - progress
+      - status
+    ReportJobRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ReportKindEnum'
+        start:
+          type: string
+          format: date
+          nullable: true
+        end:
+          type: string
+          format: date
+          nullable: true
+        org_unit:
+          type: string
+          format: uuid
+          nullable: true
+        agent:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - kind
+    ReportJobStatusEnum:
+      enum:
+      - pending
+      - running
+      - done
+      - failed
+      type: string
+      description: |-
+        * `pending` - En attente
+        * `running` - En cours
+        * `done` - Terminé
+        * `failed` - Échec
+    ReportKindEnum:
+      enum:
+      - punctuality
+      - monthly_sheet
+      - payroll
+      - checkins
+      - badges
+      type: string
+      description: |-
+        * `punctuality` - Ponctualité (Excel)
+        * `monthly_sheet` - Feuille de présence mensuelle (PDF)
+        * `payroll` - Éléments variables de paie (Excel)
+        * `checkins` - Pointages (CSV)
+        * `badges` - Planche de badges QR (PDF)
+    ReportSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ReportKindEnum'
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        recipients:
+          description: Adresses e-mail
+        is_active:
+          type: boolean
+      required:
+      - frequency
+      - id
+      - kind
+    ReportScheduleRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ReportKindEnum'
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        recipients:
+          description: Adresses e-mail
+        is_active:
+          type: boolean
+      required:
+      - frequency
+      - kind
+    Request:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+        agent_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/RequestKindEnum'
+        category:
+          $ref: '#/components/schemas/RequestCategoryEnum'
+        target_date:
+          type: string
+          format: date
+          title: Date concernée
+        target_checkin:
+          type: string
+          format: uuid
+          nullable: true
+        requested_direction:
+          type: string
+          maxLength: 16
+        requested_time:
+          type: string
+          format: date-time
+          nullable: true
+        reason:
+          type: string
+          title: Motif
+        status:
+          allOf:
+          - $ref: '#/components/schemas/RequestStatusEnum'
+          readOnly: true
+        decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Decision'
+          readOnly: true
+        attachment_url:
+          type: string
+          nullable: true
+          readOnly: true
+        can_decide:
+          type: boolean
+          readOnly: true
+        resulting_checkin:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - agent
+      - agent_name
+      - attachment_url
+      - can_decide
+      - category
+      - created_at
+      - decisions
+      - id
+      - kind
+      - reason
+      - resulting_checkin
+      - status
+      - target_date
+    RequestCategoryEnum:
+      enum:
+      - late
+      - absence
+      - early_leave
+      - missing_checkin
+      - wrong_checkin
+      - overtime
+      type: string
+      description: |-
+        * `late` - Retard
+        * `absence` - Absence
+        * `early_leave` - Départ anticipé
+        * `missing_checkin` - Oubli de pointage
+        * `wrong_checkin` - Pointage erroné
+        * `overtime` - Heures supplémentaires
+    RequestCreateRequest:
+      type: object
+      properties:
+        agent:
+          type: string
+          format: uuid
+          description: 'RH uniquement : demande pour un agent.'
+        kind:
+          $ref: '#/components/schemas/RequestKindEnum'
+        category:
+          $ref: '#/components/schemas/RequestCategoryEnum'
+        target_date:
+          type: string
+          format: date
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        target_checkin:
+          type: string
+          format: uuid
+          nullable: true
+        requested_direction:
+          oneOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        requested_time:
+          type: string
+          format: date-time
+          nullable: true
+        attachment:
+          type: string
+          format: binary
+          nullable: true
+      required:
+      - category
+      - kind
+      - reason
+      - target_date
+    RequestKindEnum:
+      enum:
+      - justification
+      - correction
+      - overtime
+      type: string
+      description: |-
+        * `justification` - Justificatif
+        * `correction` - Correction de pointage
+        * `overtime` - Heures supplémentaires
+    RequestStatusEnum:
+      enum:
+      - pending_manager
+      - pending_hr
+      - approved
+      - rejected
+      - cancelled
+      type: string
+      description: |-
+        * `pending_manager` - En attente du manager
+        * `pending_hr` - En attente du RH
+        * `approved` - Validée
+        * `rejected` - Refusée
+        * `cancelled` - Annulée
     ResultEnum:
       enum:
       - accepted
