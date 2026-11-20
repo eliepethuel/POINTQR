@@ -31,6 +31,17 @@ class TenantManager(models.Manager[Any]):
         return qs.filter(company_id=company_id) if company_id else qs
 
 
+class SharedTenantManager(models.Manager[Any]):
+    """Like TenantManager, plus shared reference rows (company NULL), e.g. national holidays."""
+
+    def get_queryset(self) -> models.QuerySet[Any]:
+        qs = super().get_queryset()
+        company_id = current_company_id()
+        if company_id is None:
+            return qs
+        return qs.filter(models.Q(company_id=company_id) | models.Q(company_id__isnull=True))
+
+
 class TenantModel(TimeStampedModel):
     """Every business table carries ``company_id`` and is protected by RLS (ADR-0004)."""
 
