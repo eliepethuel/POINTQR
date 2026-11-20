@@ -3,13 +3,17 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts import views as accounts
-from apps.attendance import days_views
+from apps.attendance import days_views, me_views
 from apps.attendance import views as attendance
+from apps.audit import views as audit
 from apps.kiosks import views as kiosks
 from apps.notifications import views as notifications
 from apps.organization import views as organization
+from apps.reports import views as reports
+from apps.requests_app import views as requests_views
 from apps.schedules import views as schedules
 from apps.tenancy import views as tenancy
+from common.downloads import SignedDownloadView
 
 router = DefaultRouter(trailing_slash=True)
 router.register("users", accounts.UserViewSet, basename="user")
@@ -29,6 +33,10 @@ router.register("schedule-assignments", schedules.AssignmentViewSet, basename="s
 router.register("schedule-exceptions", schedules.ExceptionViewSet, basename="schedule-exception")
 router.register("holidays", schedules.HolidayViewSet, basename="holiday")
 router.register("notifications", notifications.NotificationViewSet, basename="notification")
+router.register("requests", requests_views.RequestViewSet, basename="request")
+router.register("audit-logs", audit.AuditLogViewSet, basename="audit-log")
+router.register("reports", reports.ReportJobViewSet, basename="report")
+router.register("report-schedules", reports.ReportScheduleViewSet, basename="report-schedule")
 router.register("platform/companies", tenancy.CompanyViewSet, basename="platform-company")
 router.register(
     "platform/subscriptions", tenancy.SubscriptionViewSet, basename="platform-subscription"
@@ -47,6 +55,10 @@ api_v1: list[URLPattern | URLResolver] = [
     path("auth/", include((auth_urls, "auth"))),
     path("settings/company/", tenancy.CompanySettingsView.as_view(), name="company-settings"),
     path("platform/stats/", tenancy.PlatformStatsView.as_view(), name="platform-stats"),
+    path("me/history/", me_views.MyHistoryView.as_view(), name="me-history"),
+    path("me/export/", me_views.MyExportView.as_view(), name="me-export"),
+    path("corrections/", me_views.CorrectionView.as_view(), name="corrections"),
+    path("files/", SignedDownloadView.as_view(), name="files"),
     path("dashboard/today/", days_views.DashboardView.as_view(), name="dashboard-today"),
     path("kiosk/pair/", kiosks.KioskPairView.as_view(), name="kiosk-pair"),
     path("kiosk/heartbeat/", kiosks.KioskHeartbeatView.as_view(), name="kiosk-heartbeat"),
