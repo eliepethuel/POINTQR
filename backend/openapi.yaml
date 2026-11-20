@@ -155,6 +155,29 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/agents/{id}/badge/:
+    get:
+      operationId: agents_badge
+      description: 'Mode C: the agent''s printed badge QR (EF-11). Reprinting rotates
+        it (rotate-badge).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrintedToken'
+          description: ''
   /api/v1/agents/{id}/devices/:
     get:
       operationId: agents_devices
@@ -326,6 +349,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
           description: ''
+  /api/v1/checkins/:
+    get:
+      operationId: checkins_list
+      description: Check-ins and anomalies (``result=refused``) for HR, managers (their
+        scope) and auditors.
+      parameters:
+      - in: query
+        name: agent
+        schema:
+          type: string
+      - name: cursor
+        required: false
+        in: query
+        description: La valeur du curseur de pagination.
+        schema:
+          type: string
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: offline
+        schema:
+          type: boolean
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: result
+        schema:
+          type: string
+          enum:
+          - accepted
+          - ignored
+          - refused
+      - in: query
+        name: site
+        schema:
+          type: string
+      tags:
+      - checkins
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCheckInList'
+          description: ''
+  /api/v1/checkins/{id}/:
+    get:
+      operationId: checkins_retrieve
+      description: Check-ins and anomalies (``result=refused``) for HR, managers (their
+        scope) and auditors.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) pointage.
+        required: true
+      tags:
+      - checkins
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+          description: ''
   /api/v1/device-requests/:
     get:
       operationId: device_requests_list
@@ -492,6 +593,304 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+          description: ''
+  /api/v1/kiosk/checkins/:
+    post:
+      operationId: kiosk_checkin
+      description: Badge (mode C) or personal rotating QR (mode B) scanned by the
+        tablet camera.
+      tags:
+      - kiosk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BadgeScanRequestRequest'
+        required: true
+      security:
+      - kioskAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInOutcome'
+          description: ''
+  /api/v1/kiosk/checkins/batch/:
+    post:
+      operationId: kiosk_checkins_batch
+      description: 'Offline queue upload (up to 7 days, R5): idempotent per client_uuid.'
+      tags:
+      - kiosk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BadgeBatchRequestRequest'
+        required: true
+      security:
+      - kioskAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+          description: ''
+  /api/v1/kiosk/heartbeat/:
+    post:
+      operationId: kiosk_heartbeat
+      tags:
+      - kiosk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequestRequest'
+      security:
+      - kioskAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatResponse'
+          description: ''
+  /api/v1/kiosk/pair/:
+    post:
+      operationId: kiosk_pair
+      description: The tablet exchanges the 6-digit code for its identity, key and
+        machine token.
+      tags:
+      - kiosk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PairRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PairResponse'
+          description: ''
+  /api/v1/kiosks/:
+    get:
+      operationId: kiosks_list
+      description: Back-office management of the entrance tablets (company administrator).
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: L'index initial depuis lequel retourner les résultats.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: Un terme de recherche.
+        schema:
+          type: string
+      tags:
+      - kiosks
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedKioskList'
+          description: ''
+  /api/v1/kiosks/{id}/:
+    get:
+      operationId: kiosks_retrieve
+      description: Back-office management of the entrance tablets (company administrator).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) borne.
+        required: true
+      tags:
+      - kiosks
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kiosk'
+          description: ''
+  /api/v1/kiosks/{id}/revoke/:
+    post:
+      operationId: kiosks_revoke
+      description: Back-office management of the entrance tablets (company administrator).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) borne.
+        required: true
+      tags:
+      - kiosks
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kiosk'
+          description: ''
+  /api/v1/kiosks/{id}/rotate-key/:
+    post:
+      operationId: kiosks_rotate_key
+      description: Back-office management of the entrance tablets (company administrator).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) borne.
+        required: true
+      tags:
+      - kiosks
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kiosk'
+          description: ''
+  /api/v1/kiosks/pairing-codes/:
+    post:
+      operationId: kiosks_pairing_code
+      description: Back-office management of the entrance tablets (company administrator).
+      tags:
+      - kiosks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PairingCodeRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PairingCode'
+          description: ''
+  /api/v1/mobile/activate/:
+    post:
+      operationId: mobile_activate
+      description: 'First connection on a phone: binds it to the agent (EF-09, RG-13).'
+      tags:
+      - mobile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileStatus'
+          description: ''
+  /api/v1/mobile/checkins/:
+    post:
+      operationId: mobile_checkin
+      description: Mode A (kiosk QR) and mode D (printed site QR) scanned by the agent's
+        phone.
+      tags:
+      - mobile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneCheckInRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInOutcome'
+          description: ''
+  /api/v1/mobile/personal-key/:
+    get:
+      operationId: mobile_personal_key
+      description: Key of the rotating personal QR (mode B), bound to the agent's
+        phone.
+      parameters:
+      - in: query
+        name: device_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - mobile
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalKey'
+          description: ''
+  /api/v1/mobile/status/:
+    get:
+      operationId: mobile_status
+      parameters:
+      - in: query
+        name: device_id
+        schema:
+          type: string
+      tags:
+      - mobile
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileStatus'
           description: ''
   /api/v1/org-units/:
     get:
@@ -1205,6 +1604,29 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/sites/{id}/printed-qr/:
+    get:
+      operationId: sites_printed_qr
+      description: 'Mode D: the static site QR to print for small structures without
+        a kiosk.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sites
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrintedToken'
+          description: ''
   /api/v1/users/:
     get:
       operationId: users_list
@@ -1350,6 +1772,23 @@ paths:
           description: ''
 components:
   schemas:
+    ActivateRequestRequest:
+      type: object
+      properties:
+        device_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        model:
+          type: string
+          default: ''
+          maxLength: 120
+        os:
+          type: string
+          default: ''
+          maxLength: 60
+      required:
+      - device_id
     Agent:
       type: object
       properties:
@@ -1508,6 +1947,228 @@ components:
           type: string
       required:
       - step
+    BadgeBatchRequestRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BadgeScanRequestRequest'
+      required:
+      - items
+    BadgeScanRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 200
+        client_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        scanned_at:
+          type: string
+          format: date-time
+          nullable: true
+        offline:
+          type: boolean
+          default: false
+      required:
+      - token
+    BatchItemResult:
+      type: object
+      properties:
+        client_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        result:
+          type: string
+        refusal_code:
+          type: string
+      required:
+      - client_uuid
+      - refusal_code
+      - result
+    BatchResult:
+      type: object
+      properties:
+        received:
+          type: integer
+        accepted:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchItemResult'
+      required:
+      - accepted
+      - items
+      - received
+    CheckIn:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agent:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        agent_name:
+          type: string
+          readOnly: true
+        employee_number:
+          type: string
+          readOnly: true
+        site:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        site_name:
+          type: string
+          readOnly: true
+        kiosk:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        kiosk_name:
+          type: string
+          readOnly: true
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          readOnly: true
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          readOnly: true
+        trust:
+          allOf:
+          - $ref: '#/components/schemas/TrustEnum'
+          readOnly: true
+        server_ts:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Heure serveur
+        effective_ts:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Heure retenue
+        offline:
+          type: boolean
+          readOnly: true
+          title: Hors-ligne
+        distance_m:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Distance au site (m)
+        accuracy_m:
+          type: integer
+          readOnly: true
+          nullable: true
+        result:
+          allOf:
+          - $ref: '#/components/schemas/ResultEnum'
+          readOnly: true
+        refusal_code:
+          allOf:
+          - $ref: '#/components/schemas/RefusalCodeEnum'
+          readOnly: true
+        refusal_label:
+          type: string
+          readOnly: true
+        refusal_details:
+          readOnly: true
+        is_correction:
+          type: boolean
+          readOnly: true
+        corrects:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        reason:
+          type: string
+          readOnly: true
+          title: Motif
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Enregistré le
+      required:
+      - accuracy_m
+      - agent
+      - agent_name
+      - corrects
+      - created_at
+      - direction
+      - distance_m
+      - effective_ts
+      - employee_number
+      - id
+      - is_correction
+      - kiosk
+      - kiosk_name
+      - mode
+      - offline
+      - reason
+      - refusal_code
+      - refusal_details
+      - refusal_label
+      - result
+      - server_ts
+      - site
+      - site_name
+      - trust
+    CheckInOutcome:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        result:
+          type: string
+        direction:
+          type: string
+        refusal_code:
+          type: string
+        refusal_details:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+        late_minutes:
+          type: integer
+        effective_ts:
+          type: string
+          format: date-time
+        offline:
+          type: boolean
+        agent_name:
+          type: string
+          nullable: true
+      required:
+      - agent_name
+      - direction
+      - effective_ts
+      - id
+      - late_minutes
+      - message
+      - offline
+      - refusal_code
+      - refusal_details
+      - result
     Company:
       type: object
       properties:
@@ -1876,6 +2537,18 @@ components:
         * `pending` - En attente
         * `approved` - Validée
         * `rejected` - Refusée
+    DirectionEnum:
+      enum:
+      - in
+      - out
+      - break_out
+      - break_in
+      type: string
+      description: |-
+        * `in` - Entrée
+        * `out` - Sortie
+        * `break_out` - Début de pause
+        * `break_in` - Fin de pause
     Health:
       type: object
       properties:
@@ -1907,6 +2580,37 @@ components:
       description: |-
         * `ok` - ok
         * `degraded` - degraded
+    HeartbeatRequestRequest:
+      type: object
+      properties:
+        app_version:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 32
+        pending:
+          type: integer
+          minimum: 0
+          default: 0
+        key_version:
+          type: integer
+          minimum: 0
+          default: 0
+    HeartbeatResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        key_version:
+          type: integer
+        secret:
+          type: string
+        epoch_ms:
+          type: integer
+      required:
+      - epoch_ms
+      - key_version
+      - status
     ImportError:
       type: object
       properties:
@@ -1962,6 +2666,113 @@ components:
         * `direction` - Direction
         * `service` - Service
         * `team` - Équipe
+    Kiosk:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Nom
+        site:
+          type: string
+          format: uuid
+          readOnly: true
+        site_name:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/KioskStatusEnum'
+          readOnly: true
+        last_seen_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Dernière connexion
+        app_version:
+          type: string
+          readOnly: true
+        pending_offline:
+          type: integer
+          readOnly: true
+          title: Pointages en attente
+        key_version:
+          type: integer
+          readOnly: true
+        online:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - app_version
+      - created_at
+      - id
+      - key_version
+      - last_seen_at
+      - name
+      - online
+      - pending_offline
+      - site
+      - site_name
+      - status
+    KioskCompany:
+      type: object
+      properties:
+        legal_name:
+          type: string
+        code:
+          type: string
+        timezone:
+          type: string
+        primary_color:
+          type: string
+        highlight_color:
+          type: string
+      required:
+      - code
+      - highlight_color
+      - legal_name
+      - primary_color
+      - timezone
+    KioskSite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        radius_m:
+          type: integer
+      required:
+      - id
+      - latitude
+      - longitude
+      - name
+      - radius_m
+    KioskStatusEnum:
+      enum:
+      - active
+      - revoked
+      type: string
+      description: |-
+        * `active` - Active
+        * `revoked` - Révoquée
     LoginRequest:
       type: object
       properties:
@@ -2041,6 +2852,54 @@ components:
       required:
       - code
       - mfa_token
+    MobileStatus:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        agent_name:
+          type: string
+        employee_number:
+          type: string
+        device_bound:
+          type: boolean
+        next_direction:
+          type: string
+        site_name:
+          type: string
+          nullable: true
+        schedule:
+          type: string
+          nullable: true
+        today:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckIn'
+      required:
+      - agent_id
+      - agent_name
+      - device_bound
+      - employee_number
+      - next_direction
+      - schedule
+      - site_name
+      - today
+    ModeEnum:
+      enum:
+      - A
+      - B
+      - C
+      - D
+      type: string
+      description: |-
+        * `A` - Borne + téléphone
+        * `B` - QR personnel scanné par la borne
+        * `C` - Badge imprimé
+        * `D` - QR du site sans borne
+    NullEnum:
+      enum:
+      - null
     OnboardingRequest:
       type: object
       description: Super-admin creates a company, its subscription and first administrator
@@ -2220,6 +3079,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Agent'
+    PaginatedCheckInList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckIn'
     PaginatedCompanyList:
       type: object
       required:
@@ -2266,6 +3144,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceChangeRequest'
+    PaginatedKioskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Kiosk'
     PaginatedOrgUnitList:
       type: object
       required:
@@ -2358,6 +3259,71 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    PairRequestRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 1
+          pattern: ^\s*\d{6}\s*$
+      required:
+      - code
+    PairResponse:
+      type: object
+      properties:
+        kiosk_id:
+          type: string
+          format: uuid
+        kiosk_name:
+          type: string
+        token:
+          type: string
+        secret:
+          type: string
+        key_version:
+          type: integer
+        site:
+          $ref: '#/components/schemas/KioskSite'
+        company:
+          $ref: '#/components/schemas/KioskCompany'
+        epoch_ms:
+          type: integer
+      required:
+      - company
+      - epoch_ms
+      - key_version
+      - kiosk_id
+      - kiosk_name
+      - secret
+      - site
+      - token
+    PairingCode:
+      type: object
+      properties:
+        code:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        site_name:
+          type: string
+      required:
+      - code
+      - expires_at
+      - site_name
+    PairingCodeRequestRequest:
+      type: object
+      properties:
+        site:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+      required:
+      - name
+      - site
     PatchedAgentRequest:
       type: object
       properties:
@@ -2632,6 +3598,63 @@ components:
           type: string
           writeOnly: true
           minLength: 10
+    PersonalKey:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        window_seconds:
+          type: integer
+      required:
+      - agent_id
+      - key
+      - window_seconds
+    PhoneCheckInRequestRequest:
+      type: object
+      description: Mobile payload — a few hundred bytes (ENF-21 < 5 KB).
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 200
+        device_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        latitude:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        accuracy_m:
+          type: integer
+          minimum: 0
+          nullable: true
+        mock_location:
+          type: boolean
+          default: false
+        wifi:
+          type: string
+          nullable: true
+          maxLength: 64
+        direction:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - device_id
+      - token
     PlanEnum:
       enum:
       - starter
@@ -2658,6 +3681,62 @@ components:
       - agents
       - checkins_today
       - companies
+    PrintedToken:
+      type: object
+      properties:
+        token:
+          type: string
+        caption:
+          type: string
+      required:
+      - caption
+      - token
+    RefusalCodeEnum:
+      enum:
+      - COMPANY_SUSPENDED
+      - TOKEN_INVALID
+      - TOKEN_EXPIRED
+      - TOKEN_REPLAYED
+      - KIOSK_REVOKED
+      - BADGE_REVOKED
+      - AGENT_INACTIVE
+      - DEVICE_NOT_BOUND
+      - DEVICE_MISMATCH
+      - LOCATION_MISSING
+      - MOCK_LOCATION
+      - OUT_OF_ZONE
+      - WIFI_NOT_ALLOWED
+      - OFFLINE_TOO_OLD
+      - DUPLICATE
+      - PERIOD_CLOSED
+      type: string
+      description: |-
+        * `COMPANY_SUSPENDED` - Entreprise suspendue
+        * `TOKEN_INVALID` - QR invalide
+        * `TOKEN_EXPIRED` - QR expiré
+        * `TOKEN_REPLAYED` - QR déjà utilisé
+        * `KIOSK_REVOKED` - Borne révoquée
+        * `BADGE_REVOKED` - Badge remplacé
+        * `AGENT_INACTIVE` - Agent inactif
+        * `DEVICE_NOT_BOUND` - Téléphone non activé
+        * `DEVICE_MISMATCH` - Appareil non autorisé
+        * `LOCATION_MISSING` - Position absente
+        * `MOCK_LOCATION` - Position simulée
+        * `OUT_OF_ZONE` - Hors zone
+        * `WIFI_NOT_ALLOWED` - Wi-Fi non autorisé
+        * `OFFLINE_TOO_OLD` - Pointage hors-ligne trop ancien
+        * `DUPLICATE` - Doublon (moins de 2 minutes)
+        * `PERIOD_CLOSED` - Période clôturée
+    ResultEnum:
+      enum:
+      - accepted
+      - refused
+      - ignored
+      type: string
+      description: |-
+        * `accepted` - Accepté
+        * `refused` - Refusé
+        * `ignored` - Ignoré (doublon)
     RoleEnum:
       enum:
       - company_admin
@@ -2848,6 +3927,14 @@ components:
         * `active` - Actif
         * `expired` - Expiré
         * `cancelled` - Résilié
+    TrustEnum:
+      enum:
+      - high
+      - medium
+      type: string
+      description: |-
+        * `high` - Élevé
+        * `medium` - Moyen
     User:
       type: object
       description: Accounts managed by the company administrator (EF-40).
@@ -2934,3 +4021,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    kioskAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Kiosk <kiosk_id>.<token>
