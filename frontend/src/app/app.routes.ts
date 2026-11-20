@@ -75,10 +75,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/agents/agents-page').then((m) => m.AgentsPage),
       },
       {
+        path: 'horaires',
+        title: 'Horaires · PointQR',
+        data: { roles: ['company_admin', 'hr', 'manager', 'auditor'] },
+        loadComponent: () =>
+          import('./features/schedules/schedules-page').then((m) => m.SchedulesPage),
+      },
+      {
         path: 'agents/import',
         title: 'Import des agents · PointQR',
         data: { roles: ['company_admin', 'hr'] },
         loadComponent: () => import('./features/agents/import-page').then((m) => m.ImportPage),
+      },
+      {
+        path: 'agents/:id',
+        title: 'Fiche agent · PointQR',
+        data: { roles: STAFF },
+        loadComponent: () =>
+          import('./features/agents/agent-detail-page').then((m) => m.AgentDetailPage),
       },
       {
         path: 'organisation',
