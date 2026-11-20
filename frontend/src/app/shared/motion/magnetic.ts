@@ -4,9 +4,10 @@ import { MotionService } from './motion-service';
 
 /**
  * Button that is gently attracted by the cursor (fine pointers only).
- * Animates `transform` only, batched in requestAnimationFrame.
+ * Writes the individual `translate` property (batched in requestAnimationFrame) so it composes with
+ * other transform-based effects such as [pqRevealOnScroll]; the transition lives in `.pq-magnetic`.
  */
-@Directive({ selector: '[pqMagnetic]' })
+@Directive({ selector: '[pqMagnetic]', host: { class: 'pq-magnetic' } })
 export class Magnetic {
   /** Maximum displacement in px. */
   readonly magneticStrength = input(10);
@@ -21,7 +22,6 @@ export class Magnetic {
       if (!window.matchMedia('(pointer: fine)').matches) return;
 
       let frame = 0;
-      el.style.transition = 'transform var(--pq-dur-base) var(--pq-ease-out-back)';
 
       const move = (event: PointerEvent) => {
         if (this.motion.reduced()) return;
@@ -31,12 +31,12 @@ export class Magnetic {
         const strength = this.magneticStrength();
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(() => {
-          el.style.transform = `translate3d(${dx * strength}px, ${dy * strength}px, 0)`;
+          el.style.translate = `${dx * strength}px ${dy * strength}px`;
         });
       };
       const reset = () => {
         cancelAnimationFrame(frame);
-        el.style.transform = '';
+        el.style.translate = '';
       };
 
       el.addEventListener('pointermove', move);

@@ -98,6 +98,17 @@
   transform: none;
 }
 
+/* Magnetic buttons ([pqMagnetic] writes `translate`); composes with the reveal transition */
+.pq-magnetic {
+  transition: translate var(--pq-dur-base) var(--pq-ease-out-back);
+}
+[data-reveal].pq-magnetic {
+  transition:
+    opacity var(--pq-dur-slow) var(--pq-ease-out-expo) var(--pq-reveal-delay, 0ms),
+    transform var(--pq-dur-slow) var(--pq-ease-out-expo) var(--pq-reveal-delay, 0ms),
+    translate var(--pq-dur-base) var(--pq-ease-out-back);
+}
+
 /* Visible focus everywhere (accessibility) */
 :focus-visible {
   outline: 2px solid var(--pq-highlight);
