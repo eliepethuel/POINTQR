@@ -79,6 +79,7 @@ function Find-Psql {
 }
 
 function Initialize-Database {
+  $ErrorActionPreference = 'Continue'
   $cfg = Read-DotEnv
   $psql = Find-Psql
   $superUser = Read-Host 'PostgreSQL superuser (default: postgres)'
@@ -93,12 +94,14 @@ function Initialize-Database {
 }
 
 function Reset-Database {
+  $ErrorActionPreference = 'Continue'
   # Development only: drops every table, then migrations rebuild the schema (owner role, no superuser).
   $cfg = Read-DotEnv
   $psql = Find-Psql
   $env:PGPASSWORD = $cfg.POSTGRES_OWNER_PASSWORD
   try {
     $sql = @"
+SET client_min_messages = warning;
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
 GRANT USAGE ON SCHEMA public TO "$($cfg.APP_DB_USER)";
