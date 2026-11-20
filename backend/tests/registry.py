@@ -123,3 +123,50 @@ def _phase3_registry() -> None:
 
 
 _phase3_registry()
+
+
+def _phase4_registry() -> None:
+    from datetime import date
+
+    from apps.audit.models import AuditLog
+    from apps.reports.models import ReportJob, ReportSchedule
+    from apps.requests_app.models import Request
+    from apps.tenancy.context import tenant_context
+
+    def request(company: Company) -> Any:
+        agent = factories.AgentFactory(company=company)
+        with tenant_context(company.id):
+            return Request.objects.create(
+                agent=agent,
+                kind="justification",
+                category="late",
+                target_date=date(2026, 11, 16),
+                reason="Test",
+            )
+
+    def job(company: Company) -> Any:
+        with tenant_context(company.id):
+            return ReportJob.objects.create(
+                kind="punctuality", start=date(2026, 10, 1), end=date(2026, 10, 31)
+            )
+
+    def schedule(company: Company) -> Any:
+        with tenant_context(company.id):
+            return ReportSchedule.objects.create(
+                kind="punctuality", frequency="weekly", recipients=["a@b.ci"]
+            )
+
+    def audit(company: Company) -> Any:
+        with tenant_context(company.id):
+            return AuditLog.objects.create(
+                company_id=company.id,
+                actor_label="test",
+                action="x",
+                object_type="t",
+                object_id="1",
+            )
+
+    FACTORIES.update({Request: request, ReportJob: job, ReportSchedule: schedule, AuditLog: audit})
+
+
+_phase4_registry()

@@ -19,3 +19,8 @@ CELERY_TASK_EAGER_PROPAGATES = True
 OTP_TOTP_THROTTLE_FACTOR = 0
 # Async tests (WebSocket) run queries in worker threads: never keep their connections open.
 DATABASES["default"]["CONN_MAX_AGE"] = 0
+import tempfile  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+MEDIA_ROOT = Path(tempfile.mkdtemp(prefix="pointqr-test-media-"))
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.attendance",
     "apps.requests_app",
     "apps.notifications",
+    "apps.reports",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -142,6 +143,10 @@ TIME_ZONE = "Africa/Abidjan"
 USE_I18N = True
 USE_TZ = True
 
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -184,6 +189,11 @@ SPECTACULAR_SETTINGS = {
         "AgentStatusEnum": "apps.organization.models.Agent.Status",
         "DeviceRequestStatusEnum": "apps.organization.models.DeviceChangeRequest.Status",
         "RoleEnum": "apps.accounts.models.Role",
+        "DirectionEnum": "apps.attendance.models.Direction",
+        "RequestKindEnum": "apps.requests_app.models.Request.Kind",
+        "RequestCategoryEnum": "apps.requests_app.models.Request.Category",
+        "ReportKindEnum": "apps.reports.models.ReportJob.Kind",
+        "NotificationKindEnum": "apps.notifications.models.Notification.Kind",
     },
 }
 
@@ -229,6 +239,22 @@ def _beat_schedule() -> dict[str, Any]:
             "schedule": crontab(hour=0, minute=20),
         },
         # EF-27: alert managers 30 minutes after the expected arrival.
+        # EF-38: scheduled reports, previous week on Mondays and previous month on the 1st.
+        "weekly-reports": {
+            "task": "reports.send_scheduled",
+            "schedule": crontab(hour=7, minute=0, day_of_week=1),
+            "args": ("weekly",),
+        },
+        "monthly-reports": {
+            "task": "reports.send_scheduled",
+            "schedule": crontab(hour=7, minute=30, day_of_month=1),
+            "args": ("monthly",),
+        },
+        # ENF-04: GPS minimisation and retention, every night.
+        "retention-purge": {
+            "task": "reports.retention_purge",
+            "schedule": crontab(hour=2, minute=0),
+        },
         "absence-alerts": {
             "task": "attendance.absence_alerts",
             "schedule": crontab(minute="*/15", hour="5-12"),

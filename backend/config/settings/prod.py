@@ -14,3 +14,21 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = "DENY"
+
+# Files on any S3-compatible service (ADR-0009); local disk if no endpoint is configured.
+if env("S3_ENDPOINT_URL", default=""):
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "endpoint_url": env("S3_ENDPOINT_URL"),
+                "bucket_name": env("S3_BUCKET", default="pointqr"),
+                "access_key": env("S3_ACCESS_KEY", default=""),
+                "secret_key": env("S3_SECRET_KEY", default=""),
+                "default_acl": "private",
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
