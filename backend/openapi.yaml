@@ -441,8 +441,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/Dashboard'
           description: ''
   /api/v1/device-requests/:
     get:
@@ -3395,6 +3394,46 @@ components:
       description: |-
         * `active` - Active
         * `suspended` - Suspendue
+    Dashboard:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        server_time:
+          type: string
+          format: date-time
+        kpis:
+          $ref: '#/components/schemas/_Kpis'
+        sites:
+          type: array
+          items:
+            $ref: '#/components/schemas/_SiteStat'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/_UnitStat'
+        recent:
+          type: array
+          items:
+            $ref: '#/components/schemas/_Recent'
+        arrivals_by_hour:
+          type: array
+          items:
+            $ref: '#/components/schemas/_Hour'
+        kiosks:
+          type: array
+          items:
+            $ref: '#/components/schemas/_KioskStat'
+      required:
+      - arrivals_by_hour
+      - date
+      - kiosks
+      - kpis
+      - recent
+      - server_time
+      - sites
+      - units
     Device:
       type: object
       properties:
@@ -5726,6 +5765,150 @@ components:
       - overtime_minutes
       - present
       - worked_minutes
+    _Hour:
+      type: object
+      properties:
+        hour:
+          type: integer
+        count:
+          type: integer
+      required:
+      - count
+      - hour
+    _KioskStat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        site:
+          type: string
+        status:
+          type: string
+        online:
+          type: boolean
+        pending:
+          type: integer
+      required:
+      - id
+      - name
+      - online
+      - pending
+      - site
+      - status
+    _Kpis:
+      type: object
+      properties:
+        present:
+          type: integer
+        late:
+          type: integer
+        absent:
+          type: integer
+        left_early:
+          type: integer
+        on_site:
+          type: integer
+        expected:
+          type: integer
+        anomalies:
+          type: integer
+        agents:
+          type: integer
+      required:
+      - absent
+      - agents
+      - anomalies
+      - expected
+      - late
+      - left_early
+      - on_site
+      - present
+    _Recent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_name:
+          type: string
+        site:
+          type: string
+          nullable: true
+        direction:
+          type: string
+        mode:
+          type: string
+        at:
+          type: string
+          format: date-time
+        result:
+          type: string
+        refusal_code:
+          type: string
+      required:
+      - agent_name
+      - at
+      - direction
+      - id
+      - mode
+      - refusal_code
+      - result
+      - site
+    _SiteStat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        radius_m:
+          type: integer
+        present:
+          type: integer
+        late:
+          type: integer
+        absent:
+          type: integer
+      required:
+      - absent
+      - id
+      - late
+      - latitude
+      - longitude
+      - name
+      - present
+      - radius_m
+    _UnitStat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        days:
+          type: integer
+        late:
+          type: integer
+        punctuality:
+          type: number
+          format: double
+      required:
+      - days
+      - id
+      - late
+      - name
+      - punctuality
   securitySchemes:
     jwtAuth:
       type: http

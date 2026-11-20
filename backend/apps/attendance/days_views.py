@@ -238,11 +238,77 @@ class PeriodViewSet(
         return Response(PeriodSerializer(period).data)
 
 
+class _Kpis(serializers.Serializer[Any]):
+    present = serializers.IntegerField()
+    late = serializers.IntegerField()
+    absent = serializers.IntegerField()
+    left_early = serializers.IntegerField()
+    on_site = serializers.IntegerField()
+    expected = serializers.IntegerField()
+    anomalies = serializers.IntegerField()
+    agents = serializers.IntegerField()
+
+
+class _SiteStat(serializers.Serializer[Any]):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+    radius_m = serializers.IntegerField()
+    present = serializers.IntegerField()
+    late = serializers.IntegerField()
+    absent = serializers.IntegerField()
+
+
+class _UnitStat(serializers.Serializer[Any]):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    days = serializers.IntegerField()
+    late = serializers.IntegerField()
+    punctuality = serializers.FloatField()
+
+
+class _Recent(serializers.Serializer[Any]):
+    id = serializers.UUIDField()
+    agent_name = serializers.CharField()
+    site = serializers.CharField(allow_null=True)
+    direction = serializers.CharField(allow_blank=True)
+    mode = serializers.CharField()
+    at = serializers.DateTimeField()
+    result = serializers.CharField()
+    refusal_code = serializers.CharField(allow_blank=True)
+
+
+class _Hour(serializers.Serializer[Any]):
+    hour = serializers.IntegerField()
+    count = serializers.IntegerField()
+
+
+class _KioskStat(serializers.Serializer[Any]):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    site = serializers.CharField()
+    status = serializers.CharField()
+    online = serializers.BooleanField()
+    pending = serializers.IntegerField()
+
+
+class DashboardSerializer(serializers.Serializer[Any]):
+    date = serializers.DateField()
+    server_time = serializers.DateTimeField()
+    kpis = _Kpis()
+    sites = _SiteStat(many=True)
+    units = _UnitStat(many=True)
+    recent = _Recent(many=True)
+    arrivals_by_hour = _Hour(many=True)
+    kiosks = _KioskStat(many=True)
+
+
 class DashboardView(APIView):
     """Today at a glance, for the whole company or the manager's teams (EF-25)."""
 
     permission_classes = [IsManagerOrAbove]
 
-    @extend_schema(operation_id="dashboard_today", responses={200: dict})
+    @extend_schema(operation_id="dashboard_today", responses=DashboardSerializer)
     def get(self, request: Request) -> Response:
         return Response(dashboard.today(company_of(request), manager_scope(request)))
