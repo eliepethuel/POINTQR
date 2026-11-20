@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.organization",
     "apps.schedules",
+    "apps.kiosks",
+    "apps.attendance",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -190,6 +192,14 @@ CSRF_TRUSTED_ORIGINS: list[str] = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 # --- Redis, Channels, Celery --------------------------------------------------------------------
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
+# Cache (replay protection SET NX, throttling): Redis protocol, database 1.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("CACHE_URL", default=REDIS_URL.rsplit("/", 1)[0] + "/1"),
+        "KEY_PREFIX": "pointqr",
+    }
+}
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
