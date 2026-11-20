@@ -51,10 +51,11 @@ extend-exclude = ["**/migrations/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM", "RUF", "N", "C4", "PT"]
-ignore = ["RUF012", "RUF001", "RUF002", "RUF003"]
+# E501: the formatter wraps code; long French strings and comments are allowed.
+ignore = ["RUF012", "RUF001", "RUF002", "RUF003", "E501", "N818"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101", "S105", "S106", "PT011", "PT012", "PT018", "N805"]
+"**/tests/**" = ["S101", "S105", "S106", "PT011", "PT012", "PT018", "N805", "N802"]
 "config/settings/*.py" = ["F403", "F405"]
 # Public demonstration data: fixed credentials and a deterministic RNG are intended.
 "apps/system/demo.py" = ["S105", "S311", "E501"]
