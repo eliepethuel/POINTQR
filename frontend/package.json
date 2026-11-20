@@ -30,6 +30,7 @@
     "@lucide/angular": "^1.77.0",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
+    "echarts": "^6.1.0",
     "gsap": "^3.15.1",
     "leaflet": "^1.9.4",
     "lottie-web": "^5.13.0",
