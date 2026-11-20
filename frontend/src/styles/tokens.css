@@ -1,0 +1,96 @@
+/*
+ * PointQR design tokens.
+ * Dark theme is the default; light theme is applied with [data-theme='light'] on <html>.
+ * Company branding overrides --pq-accent / --pq-highlight at runtime (EF-43).
+ */
+:root {
+  color-scheme: dark;
+
+  /* Palette */
+  --pq-bg: #0e0f1a;
+  --pq-surface: #1a1c2b;
+  --pq-surface-2: #2e3147;
+  --pq-border: rgb(244 244 246 / 0.08);
+  --pq-text: #f4f4f6;
+  --pq-text-muted: #9a9cb0;
+  --pq-accent: #7c5cff;
+  --pq-accent-contrast: #ffffff;
+  --pq-highlight: #d4ff3a;
+  --pq-highlight-contrast: #0e0f1a;
+  --pq-success: #3ddc97;
+  --pq-danger: #ff6b4a;
+  --pq-glass: rgb(26 28 43 / 0.62);
+  --pq-grain-opacity: 0.06;
+
+  /* Typography */
+  --pq-font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --pq-font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --pq-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Shape */
+  --pq-radius-sm: 8px;
+  --pq-radius: 14px;
+  --pq-radius-lg: 22px;
+  --pq-shadow: 0 10px 40px -12px rgb(0 0 0 / 0.55);
+
+  /* Motion (mirrors shared/motion/motion-tokens.ts) */
+  --pq-dur-instant: 100ms;
+  --pq-dur-fast: 200ms;
+  --pq-dur-base: 320ms;
+  --pq-dur-slow: 600ms;
+  --pq-dur-hero: 1200ms;
+  --pq-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --pq-ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pq-ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --pq-ease-spring: linear(
+    0,
+    0.009,
+    0.035 2.1%,
+    0.141 4.4%,
+    0.723 12.9%,
+    0.938 16.7%,
+    1.017 19.4%,
+    1.067,
+    1.089 24.3%,
+    1.09 26.1%,
+    1.059 30.9%,
+    1.01 39.2%,
+    0.996 44.4%,
+    0.997 54.1%,
+    1
+  );
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --pq-bg: #f6f6fb;
+  --pq-surface: #ffffff;
+  --pq-surface-2: #eceef6;
+  --pq-border: rgb(14 15 26 / 0.1);
+  --pq-text: #0e0f1a;
+  --pq-text-muted: #55576b;
+  --pq-accent: #6a48ff;
+  --pq-highlight: #4f6b00;
+  --pq-highlight-contrast: #ffffff;
+  --pq-success: #11865a;
+  --pq-danger: #d23f1f;
+  --pq-glass: rgb(255 255 255 / 0.7);
+  --pq-grain-opacity: 0.03;
+  --pq-shadow: 0 10px 40px -16px rgb(14 15 26 / 0.25);
+}
+
+/* Reduced motion: system preference or user switch ([data-motion='reduced']). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pq-dur-fast: 1ms;
+    --pq-dur-base: 1ms;
+    --pq-dur-slow: 1ms;
+    --pq-dur-hero: 1ms;
+  }
+}
+:root[data-motion='reduced'] {
+  --pq-dur-fast: 1ms;
+  --pq-dur-base: 1ms;
+  --pq-dur-slow: 1ms;
+  --pq-dur-hero: 1ms;
+}
