@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: pointqr
+          POSTGRES_USER: pointqr
+          POSTGRES_PASSWORD: pointqr
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pointqr" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: ci-only-secret-key
+      DATABASE_URL: postgres://pointqr:pointqr@localhost:5432/pointqr
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.10.7"
+      - run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Types
+        run: uv run mypy .
+      - name: Tests
+        run: uv run pytest --cov --cov-report=xml --cov-report=term-missing:skip-covered
+      - name: Django deploy checks
+        run: uv run python manage.py check --deploy --settings=config.settings.prod --fail-level WARNING
+        env:
+          DJANGO_SECRET_KEY: ci-only-but-long-enough-secret-key-for-deploy-checks-0123456789abcdef
+          DJANGO_ALLOWED_HOSTS: pointqr.ci
+      - name: OpenAPI schema is up to date
+        run: |
+          uv run python manage.py spectacular --file openapi.yaml --validate
+          git diff --exit-code openapi.yaml
+      - uses: actions/upload-artifact@v5
+        with:
+          name: openapi
+          path: backend/openapi.yaml
+
+  frontend:
+    runs-on: ubuntu-24.04
+    needs: backend
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24.22.3"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Generated API client is up to date
+        run: |
+          npm run api:generate
+          git diff --exit-code src/app/api
+      - name: Lint and format
+        run: npm run lint && npm run format:check
+      - name: Types
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test -- --watch=false
+      - name: Build
+        run: npm run build
