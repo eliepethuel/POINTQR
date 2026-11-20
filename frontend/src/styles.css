@@ -4,6 +4,8 @@
 @import 'tailwindcss';
 @import './styles/tokens.css';
 @import './styles/effects.css';
+@import './styles/components.css';
+@import 'leaflet/dist/leaflet.css';
 
 @theme inline {
   --color-bg: var(--pq-bg);
