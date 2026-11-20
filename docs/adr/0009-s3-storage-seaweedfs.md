@@ -1,6 +1,6 @@
 # ADR-0009 — Stockage objet S3 : SeaweedFS en développement
 
-- Statut : accepté
+- Statut : accepté pour la production ; développement : remplacé par ADR-0010
 - Date : 2026-11-20
 
 ## Contexte

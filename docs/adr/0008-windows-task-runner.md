@@ -1,6 +1,6 @@
 # ADR-0008 — Commandes de développement sous Windows et Linux
 
-- Statut : accepté
+- Statut : remplacé par ADR-0010
 - Date : 2026-11-20
 
 ## Contexte
