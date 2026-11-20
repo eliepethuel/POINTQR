@@ -1,0 +1,123 @@
+/* Reusable visual effects. Only transform, opacity and (sparingly) filter are animated. */
+
+/* Slow animated "aurora" background */
+.pq-aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 20% 30%, rgb(124 92 255 / 0.45), transparent 70%),
+    radial-gradient(35% 30% at 80% 20%, rgb(61 220 151 / 0.22), transparent 70%),
+    radial-gradient(45% 40% at 60% 80%, rgb(212 255 58 / 0.14), transparent 70%);
+  filter: blur(40px);
+  animation: pq-aurora-drift 28s var(--pq-ease-in-out-quart) infinite alternate;
+  will-change: transform;
+}
+@keyframes pq-aurora-drift {
+  from {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) rotate(8deg) scale(1.08);
+  }
+}
+
+/* Film grain overlay */
+.pq-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--pq-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Frosted glass panel */
+.pq-glass {
+  background: var(--pq-glass);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--pq-border);
+  border-radius: var(--pq-radius-lg);
+  box-shadow: var(--pq-shadow);
+}
+
+/* Cursor-following spotlight, driven by --pq-mx / --pq-my set by [pqSpotlight] */
+.pq-spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.pq-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: var(--pq-spot-opacity, 0);
+  transition: opacity var(--pq-dur-base) var(--pq-ease-out-expo);
+  background: radial-gradient(
+    420px circle at var(--pq-mx, 50%) var(--pq-my, 50%),
+    rgb(124 92 255 / 0.35),
+    transparent 45%
+  );
+}
+
+/* Skeleton shimmer */
+.pq-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--pq-surface-2);
+  border-radius: var(--pq-radius-sm);
+  color: transparent !important;
+}
+.pq-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.08), transparent);
+  animation: pq-shimmer 1.4s infinite;
+}
+@keyframes pq-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Scroll reveal states, toggled by [pqRevealOnScroll] */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity var(--pq-dur-slow) var(--pq-ease-out-expo),
+    transform var(--pq-dur-slow) var(--pq-ease-out-expo);
+  transition-delay: var(--pq-reveal-delay, 0ms);
+}
+[data-reveal='visible'] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Visible focus everywhere (accessibility) */
+:focus-visible {
+  outline: 2px solid var(--pq-highlight);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pq-aurora,
+  .pq-shimmer::after {
+    animation: none;
+  }
+  [data-reveal] {
+    transform: none;
+  }
+}
+:root[data-motion='reduced'] .pq-aurora,
+:root[data-motion='reduced'] .pq-shimmer::after {
+  animation: none;
+}
+:root[data-motion='reduced'] [data-reveal] {
+  transform: none;
+}
