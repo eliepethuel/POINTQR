@@ -3,6 +3,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts import views as accounts
+from apps.attendance import views as attendance
+from apps.kiosks import views as kiosks
 from apps.organization import views as organization
 from apps.tenancy import views as tenancy
 
@@ -15,6 +17,8 @@ router.register("devices", organization.DeviceViewSet, basename="device")
 router.register(
     "device-requests", organization.DeviceChangeRequestViewSet, basename="device-request"
 )
+router.register("kiosks", kiosks.KioskViewSet, basename="kiosk")
+router.register("checkins", attendance.CheckInViewSet, basename="checkin")
 router.register("platform/companies", tenancy.CompanyViewSet, basename="platform-company")
 router.register(
     "platform/subscriptions", tenancy.SubscriptionViewSet, basename="platform-subscription"
@@ -33,6 +37,24 @@ api_v1: list[URLPattern | URLResolver] = [
     path("auth/", include((auth_urls, "auth"))),
     path("settings/company/", tenancy.CompanySettingsView.as_view(), name="company-settings"),
     path("platform/stats/", tenancy.PlatformStatsView.as_view(), name="platform-stats"),
+    path("kiosk/pair/", kiosks.KioskPairView.as_view(), name="kiosk-pair"),
+    path("kiosk/heartbeat/", kiosks.KioskHeartbeatView.as_view(), name="kiosk-heartbeat"),
+    path("kiosk/checkins/", kiosks.KioskCheckInView.as_view(), name="kiosk-checkin"),
+    path("kiosk/checkins/batch/", kiosks.KioskBatchView.as_view(), name="kiosk-batch"),
+    path("mobile/activate/", attendance.MobileActivateView.as_view(), name="mobile-activate"),
+    path("mobile/status/", attendance.MobileStatusView.as_view(), name="mobile-status"),
+    path("mobile/checkins/", attendance.MobileCheckInView.as_view(), name="mobile-checkin"),
+    path(
+        "mobile/personal-key/",
+        attendance.MobilePersonalKeyView.as_view(),
+        name="mobile-personal-key",
+    ),
+    path(
+        "sites/<uuid:pk>/printed-qr/",
+        attendance.SitePrintedQrView.as_view(),
+        name="site-printed-qr",
+    ),
+    path("agents/<uuid:pk>/badge/", attendance.AgentBadgeView.as_view(), name="agent-badge"),
     path("", include(router.urls)),
 ]
 
