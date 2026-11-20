@@ -1,5 +1,6 @@
 """Settings shared by every environment. Values come from the environment (.env)."""
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -26,9 +27,24 @@ INSTALLED_APPS = [
     "corsheaders",
     "channels",
     "django_celery_beat",
+    "rest_framework_simplejwt.token_blacklist",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "axes",
     # PointQR
     "common",
     "apps.system",
+    "apps.tenancy",
+    "apps.accounts",
+    "apps.audit",
+    "apps.organization",
+    "apps.schedules",
+]
+
+AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 MIDDLEWARE = [
@@ -37,10 +53,42 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    # Opens the request transaction and sets app.current_tenant (ADR-0004, ADR-0011).
+    "apps.tenancy.middleware.TenantMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
+
+# --- Multi-tenancy ------------------------------------------------------------------------------
+TENANT_BASE_DOMAINS: list[str] = env.list(
+    "TENANT_BASE_DOMAINS", default=["pointqr.ci", "localhost"]
+)
+FIELD_ENCRYPTION_KEY = env("FIELD_ENCRYPTION_KEY", default="")
+
+# --- Authentication (ENF-09 to ENF-11) ----------------------------------------------------------
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+REFRESH_COOKIE_SECURE = env.bool("REFRESH_COOKIE_SECURE", default=not DEBUG)
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = ["username"]
+# Locking by IP would lock a whole office behind one NAT address; IPs are rate-limited by DRF.
+SILENCED_SYSTEM_CHECKS = ["axes.W006"]
+AXES_RESET_ON_SUCCESS = True
+AXES_USERNAME_FORM_FIELD = "username"
+AXES_VERBOSE = False
+AXES_LOCKOUT_CALLABLE = "apps.accounts.lockout.lockout_response"
+OTP_TOTP_ISSUER = "PointQR"
 
 ROOT_URLCONF = "config.urls"
 ASGI_APPLICATION = "config.asgi.application"
@@ -63,7 +111,7 @@ TEMPLATES = [
 
 # --- Database -----------------------------------------------------------------------------------
 DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
+# Transactions are opened by TenantMiddleware (ADR-0011), not ATOMIC_REQUESTS.
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -95,11 +143,24 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # --- REST framework -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["apps.accounts.authentication.PointQRJWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "common.exceptions.problem_exception_handler",
-    "DEFAULT_THROTTLE_RATES": {"anon": "60/min"},
+    "DEFAULT_FILTER_BACKENDS": [
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "common.pagination.StandardPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/min",
+        "auth": "20/min",
+        "refresh": "60/min",
+        "checkin_device": "12/min",
+        "checkin_ip": "600/min",
+        "kiosk": "1200/min",
+    },
 }
 
 SPECTACULAR_SETTINGS = {
@@ -109,7 +170,14 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+",
     "COMPONENT_SPLIT_REQUEST": True,
-    "ENUM_NAME_OVERRIDES": {"HealthStatusEnum": ["ok", "degraded"]},
+    "ENUM_NAME_OVERRIDES": {
+        "HealthStatusEnum": ["ok", "degraded"],
+        "CompanyStatusEnum": "apps.tenancy.models.Company.Status",
+        "SubscriptionStatusEnum": "apps.tenancy.models.Subscription.Status",
+        "AgentStatusEnum": "apps.organization.models.Agent.Status",
+        "DeviceRequestStatusEnum": "apps.organization.models.DeviceChangeRequest.Status",
+        "RoleEnum": "apps.accounts.models.Role",
+    },
 }
 
 # --- CORS: frontend origin only -----------------------------------------------------------------
@@ -122,7 +190,7 @@ CSRF_TRUSTED_ORIGINS: list[str] = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {"hosts": [REDIS_URL]},
     },
 }
