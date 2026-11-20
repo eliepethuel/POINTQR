@@ -1,0 +1,176 @@
+<pq-page-header
+  title="Demandes"
+  eyebrow="Suivi"
+  subtitle="Justificatifs et corrections : un pointage n'est jamais effacé, la correction s'ajoute."
+>
+  @if (isAgent()) {
+    <button type="button" class="pq-btn pq-btn-primary" (click)="openNew()">
+      Nouvelle demande
+    </button>
+  }
+</pq-page-header>
+
+<div class="pq-toolbar">
+  <div class="segmented" role="radiogroup" aria-label="Filtre">
+    <button type="button" [class.on]="filter() === 'pending'" (click)="filter.set('pending')">
+      À traiter
+    </button>
+    <button type="button" [class.on]="filter() === ''" (click)="filter.set('')">Toutes</button>
+  </div>
+</div>
+
+<section class="list">
+  @for (req of list.value()?.results ?? []; track req.id; let i = $index) {
+    <article class="pq-card item" pqRevealOnScroll [revealIndex]="i">
+      <header>
+        <div>
+          <strong>{{ req.agent_name }}</strong>
+          <span class="muted">
+            · {{ categoryLabels[req.category] }} du {{ req.target_date | date: 'dd/MM/yyyy' }}</span
+          >
+        </div>
+        <span class="pq-badge" [attr.data-status]="req.status">{{
+          statusLabels[req.status ?? '']
+        }}</span>
+      </header>
+      <p class="reason">{{ req.reason }}</p>
+      @if (req.requested_time) {
+        <p class="muted">
+          Heure demandée :
+          <strong class="pq-mono">{{ req.requested_time | date: 'HH:mm' }}</strong> ({{
+            req.requested_direction === 'in' ? 'entrée' : 'sortie'
+          }})
+        </p>
+      }
+      @if (req.attachment_url) {
+        <a class="pq-btn pq-btn-sm" [href]="req.attachment_url">Voir la pièce jointe</a>
+      }
+      @if (req.decisions.length) {
+        <ol class="timeline">
+          @for (d of req.decisions; track d.id) {
+            <li [class.ok]="d.approved">
+              <span class="pq-mono">{{ d.created_at | date: 'dd/MM HH:mm' }}</span>
+              {{ d.level === 'hr' ? 'RH' : 'Manager' }} — {{ d.approved ? 'validé' : 'refusé' }} par
+              {{ d.decided_by_name }} {{ d.comment ? '« ' + d.comment + ' »' : '' }}
+            </li>
+          }
+        </ol>
+      }
+      @if (req.can_decide) {
+        <div class="decide">
+          <input
+            class="pq-input"
+            [(ngModel)]="comment"
+            name="comment"
+            placeholder="Commentaire (optionnel)"
+            aria-label="Commentaire"
+          />
+          <button type="button" class="pq-btn pq-btn-primary pq-btn-sm" (click)="decide(req, true)">
+            Valider
+          </button>
+          <button type="button" class="pq-btn pq-btn-danger pq-btn-sm" (click)="decide(req, false)">
+            Refuser
+          </button>
+        </div>
+      } @else if (
+        req.agent === session.user()?.agent_id &&
+        (req.status === 'pending_manager' || req.status === 'pending_hr')
+      ) {
+        <button type="button" class="pq-btn pq-btn-ghost pq-btn-sm" (click)="cancel(req)">
+          Annuler ma demande
+        </button>
+      }
+    </article>
+  } @empty {
+    <pq-empty-state
+      title="Rien à traiter"
+      message="Les demandes de justificatif et de correction apparaissent ici."
+    />
+  }
+</section>
+
+<pq-drawer [open]="!!draft()" title="Nouvelle demande" (closed)="draft.set(null)">
+  @if (draft(); as d) {
+    <form class="form" (ngSubmit)="submit()">
+      <label class="pq-field"
+        ><span class="pq-label">Objet</span>
+        <select
+          class="pq-select"
+          name="category"
+          [ngModel]="d.category"
+          (ngModelChange)="onCategory($event)"
+        >
+          @for (c of categories; track c) {
+            <option [value]="c">{{ categoryLabels[c] }}</option>
+          }
+        </select></label
+      >
+      <label class="pq-field"
+        ><span class="pq-label">Date concernée</span>
+        <input
+          class="pq-input"
+          type="date"
+          name="date"
+          [ngModel]="d.target_date"
+          (ngModelChange)="patch({ target_date: $event })"
+          required
+      /></label>
+      @if (d.kind === 'correction') {
+        <div class="pq-grid-2">
+          <label class="pq-field"
+            ><span class="pq-label">Sens</span>
+            <select
+              class="pq-select"
+              name="dir"
+              [ngModel]="d.requested_direction"
+              (ngModelChange)="patch({ requested_direction: $event })"
+            >
+              <option value="in">Entrée</option>
+              <option value="out">Sortie</option>
+            </select></label
+          >
+          <label class="pq-field"
+            ><span class="pq-label">Heure réelle</span>
+            <input
+              class="pq-input pq-mono"
+              type="time"
+              name="time"
+              [ngModel]="d.requested_time"
+              (ngModelChange)="patch({ requested_time: $event })"
+              required
+          /></label>
+        </div>
+      }
+      <label class="pq-field"
+        ><span class="pq-label">Motif</span>
+        <textarea
+          class="pq-textarea"
+          name="reason"
+          rows="3"
+          [ngModel]="d.reason"
+          (ngModelChange)="patch({ reason: $event })"
+          required
+        ></textarea>
+      </label>
+      <label
+        class="drop"
+        [class.dragging]="dragging()"
+        (dragover)="$event.preventDefault(); dragging.set(true)"
+        (dragleave)="dragging.set(false)"
+        (drop)="onDrop($event)"
+      >
+        <input type="file" accept=".pdf,image/*" class="sr-only" (change)="onFile($event)" />
+        <span>{{
+          d.file?.name ?? 'Glissez une pièce jointe (PDF, photo) ou cliquez — 5 Mo max.'
+        }}</span>
+      </label>
+      <button
+        type="submit"
+        class="pq-btn pq-btn-primary"
+        [disabled]="busy() || !d.reason || (d.kind === 'correction' && !d.requested_time)"
+      >
+        Envoyer
+      </button>
+    </form>
+  }
+</pq-drawer>
