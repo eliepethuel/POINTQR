@@ -56,6 +56,10 @@ ignore = ["RUF012", "RUF001", "RUF002", "RUF003"]
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101", "S105", "S106", "PT011", "PT012", "PT018", "N805"]
 "config/settings/*.py" = ["F403", "F405"]
+# Public demonstration data: fixed credentials and a deterministic RNG are intended.
+"apps/system/demo.py" = ["S105", "S311", "E501"]
+"**/demo.py" = ["S311", "E501"]
+"**/management/commands/*.py" = ["E501"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"
