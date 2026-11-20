@@ -29,12 +29,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "daphne>=4.2.3",
     "django-stubs>=6.1.2",
     "djangorestframework-stubs>=3.18.2",
     "factory-boy>=3.3.3",
     "locust>=2.47.0",
     "mypy>=2.4.1",
     "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
     "ruff>=0.17.6",
@@ -66,6 +68,8 @@ ignore = ["RUF012", "RUF001", "RUF002", "RUF003", "E501", "N818"]
 DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
 addopts = "-ra --strict-markers"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 source = ["apps", "common"]
@@ -77,6 +81,8 @@ plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 strict = true
 # Django managers and querysets are dynamically typed: returning them is not an error.
 warn_return_any = false
+# Celery and Channels decorators are untyped.
+disallow_untyped_decorators = false
 disallow_subclassing_any = false
 ignore_missing_imports = true
 exclude = ["migrations/"]
@@ -88,3 +94,4 @@ ignore_errors = true
 
 [tool.django-stubs]
 django_settings_module = "config.settings.test"
+
