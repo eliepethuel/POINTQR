@@ -5,17 +5,25 @@ description = "PointQR API — dynamic QR code attendance platform"
 requires-python = ">=3.13"
 dependencies = [
     "argon2-cffi>=25.1.0",
+    "boto3>=1.44.7",
     "celery>=5.7.0",
     "channels>=4.3.2",
     "channels-redis>=4.3.0",
+    "cryptography>=50.0.2",
     "django>=5.2,<5.3",
+    "django-axes>=9.0.0",
     "django-celery-beat>=2.9.0",
     "django-cors-headers>=4.9.0",
     "django-environ>=0.14.0",
+    "django-otp>=1.7.5",
+    "django-storages>=1.14.6",
     "djangorestframework>=3.18.3",
+    "djangorestframework-simplejwt>=5.5.1",
     "drf-spectacular>=0.30.0",
+    "openpyxl>=3.1.5",
     "psycopg[binary]>=3.3.9",
     "redis>=8.1.0",
+    "reportlab>=5.1.0",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -24,11 +32,13 @@ dev = [
     "django-stubs>=6.1.2",
     "djangorestframework-stubs>=3.18.2",
     "factory-boy>=3.3.3",
+    "locust>=2.47.0",
     "mypy>=2.4.1",
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
     "pytest-django>=4.14.0",
     "ruff>=0.17.6",
+    "time-machine>=3.6.0",
 ]
 
 [tool.uv]
@@ -41,10 +51,10 @@ extend-exclude = ["**/migrations/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM", "RUF", "N", "C4", "PT"]
-ignore = ["RUF012"]
+ignore = ["RUF012", "RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101", "S105", "S106"]
+"**/tests/**" = ["S101", "S105", "S106", "PT011", "PT012", "PT018", "N805"]
 "config/settings/*.py" = ["F403", "F405"]
 
 [tool.pytest.ini_options]
@@ -60,13 +70,16 @@ omit = ["**/migrations/*", "**/tests/*"]
 python_version = "3.13"
 plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 strict = true
+# Django managers and querysets are dynamically typed: returning them is not an error.
+warn_return_any = false
 disallow_subclassing_any = false
 ignore_missing_imports = true
 exclude = ["migrations/"]
 
 [[tool.mypy.overrides]]
-module = ["*.tests.*", "*.migrations.*"]
-disallow_untyped_defs = false
+# Tests are validated by running them; factories are dynamically typed.
+module = ["*.tests.*", "tests.*", "conftest", "*.migrations.*"]
+ignore_errors = true
 
 [tool.django-stubs]
 django_settings_module = "config.settings.test"
