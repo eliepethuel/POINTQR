@@ -158,6 +158,10 @@ def _finish(
     message, minutes = _status(agent, moment, direction, tz)
     checkin = _record(**base, agent=agent, result=Result.ACCEPTED, direction=direction)
     _publish(checkin, agent, message)
+    # Keep the computed day current for the live dashboard (it stays recomputable at any time).
+    from .workdays import recompute, work_date_of
+
+    recompute(agent, work_date_of(checkin, company), company=company, now=moment)
     return Outcome(checkin, message, late_minutes=minutes)
 
 
@@ -355,6 +359,11 @@ def kiosk_check_in(company: Company, kiosk: Kiosk, scan: BadgeScan) -> Outcome:
             raise Refusal(RefusalCode.KIOSK_REVOKED)
         if scan.offline and (now - moment > OFFLINE_MAX_AGE or moment - now > OFFLINE_MAX_FUTURE):
             raise Refusal(RefusalCode.OFFLINE_TOO_OLD)
+        if scan.offline:
+            from .workdays import is_closed
+
+            if is_closed(moment.astimezone(tz_of(company)).date()):
+                raise Refusal(RefusalCode.PERIOD_CLOSED)
         try:
             token = tokens.parse(scan.token)
         except tokens.TokenError as exc:
