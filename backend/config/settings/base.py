@@ -109,7 +109,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+",
     "COMPONENT_SPLIT_REQUEST": True,
-    "ENUM_NAME_OVERRIDES": {},
+    "ENUM_NAME_OVERRIDES": {"HealthStatusEnum": ["ok", "degraded"]},
 }
 
 # --- CORS: frontend origin only -----------------------------------------------------------------

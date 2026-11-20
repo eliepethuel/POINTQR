@@ -26,7 +26,7 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/HealthStatusEnum'
         version:
           type: string
         server_time:
@@ -45,7 +45,7 @@ components:
       - server_time
       - status
       - version
-    StatusEnum:
+    HealthStatusEnum:
       enum:
       - ok
       - degraded
