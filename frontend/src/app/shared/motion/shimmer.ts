@@ -1,4 +1,4 @@
-import { Directive, input } from '@angular/core';
+import { Directive, booleanAttribute, input } from '@angular/core';
 
 /**
  * Skeleton placeholder while data loads: `<p [pqShimmer]="loading()">…</p>`.
@@ -12,5 +12,5 @@ import { Directive, input } from '@angular/core';
   },
 })
 export class Shimmer {
-  readonly pqShimmer = input(true);
+  readonly pqShimmer = input(true, { transform: booleanAttribute });
 }
