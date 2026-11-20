@@ -1,0 +1,44 @@
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/effects.css';
+
+@theme inline {
+  --color-bg: var(--pq-bg);
+  --color-surface: var(--pq-surface);
+  --color-surface-2: var(--pq-surface-2);
+  --color-line: var(--pq-border);
+  --color-ink: var(--pq-text);
+  --color-muted: var(--pq-text-muted);
+  --color-accent: var(--pq-accent);
+  --color-highlight: var(--pq-highlight);
+  --color-success: var(--pq-success);
+  --color-danger: var(--pq-danger);
+  --font-display: var(--pq-font-display);
+  --font-sans: var(--pq-font-body);
+  --font-mono: var(--pq-font-mono);
+  --radius-pq: var(--pq-radius);
+  --radius-pq-lg: var(--pq-radius-lg);
+  --ease-out-expo: var(--pq-ease-out-expo);
+  --ease-out-back: var(--pq-ease-out-back);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--pq-bg);
+  color: var(--pq-text);
+  font-family: var(--pq-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
