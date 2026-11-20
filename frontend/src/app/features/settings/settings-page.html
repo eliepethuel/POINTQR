@@ -1,0 +1,152 @@
+<pq-page-header title="Paramètres" eyebrow="Administration" />
+
+<section class="pq-card block">
+  <h2>Mes préférences</h2>
+  <div class="row">
+    <span>Thème</span>
+    <button
+      type="button"
+      class="pq-btn"
+      (click)="theme.toggle({ x: $any($event).clientX, y: $any($event).clientY })"
+    >
+      {{ theme.mode() === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre' }}
+    </button>
+  </div>
+  <fieldset class="row">
+    <legend>Animations</legend>
+    <div class="segmented" role="radiogroup" aria-label="Animations">
+      @for (
+        option of [
+          ['system', 'Comme le système'],
+          ['reduced', 'Réduire les animations'],
+          ['full', 'Toutes'],
+        ];
+        track option[0]
+      ) {
+        <label [class.on]="motion.preference() === option[0]">
+          <input
+            type="radio"
+            name="motion"
+            [value]="option[0]"
+            [checked]="motion.preference() === option[0]"
+            (change)="setMotion($any(option[0]))"
+          />
+          {{ option[1] }}
+        </label>
+      }
+    </div>
+  </fieldset>
+</section>
+
+@if (isAdmin()) {
+  <form class="pq-card block" (ngSubmit)="save()">
+    <h2>Entreprise</h2>
+    <div class="pq-grid-2">
+      <label class="pq-field"
+        ><span class="pq-label">Raison sociale</span>
+        <input
+          class="pq-input"
+          name="legal_name"
+          [ngModel]="form().legal_name"
+          (ngModelChange)="patch({ legal_name: $event })"
+      /></label>
+      <label class="pq-field"
+        ><span class="pq-label">Code entreprise (app mobile, borne)</span>
+        <input class="pq-input pq-mono" name="code" [ngModel]="form().code" disabled
+      /></label>
+    </div>
+
+    <h3>Couleurs (appliquées à l'app et à la borne)</h3>
+    <div class="colors">
+      <label class="color"
+        ><input
+          type="color"
+          name="primary"
+          [ngModel]="form().primary_color"
+          (ngModelChange)="patch({ primary_color: $event })"
+        />
+        Couleur principale</label
+      >
+      <label class="color"
+        ><input
+          type="color"
+          name="highlight"
+          [ngModel]="form().highlight_color"
+          (ngModelChange)="patch({ highlight_color: $event })"
+        />
+        Couleur des chiffres clés</label
+      >
+    </div>
+
+    <h3>Règles par défaut</h3>
+    <div class="pq-grid-2">
+      <label class="pq-field"
+        ><span class="pq-label">Rayon de géorepérage par défaut (m)</span>
+        <input
+          class="pq-input"
+          type="number"
+          min="20"
+          max="5000"
+          name="radius"
+          [ngModel]="form().default_radius_m"
+          (ngModelChange)="patch({ default_radius_m: +$event })"
+      /></label>
+      <label class="pq-field"
+        ><span class="pq-label">Circuit de validation</span>
+        <select
+          class="pq-select"
+          name="levels"
+          [ngModel]="form().approval_levels"
+          (ngModelChange)="patch({ approval_levels: +$event })"
+        >
+          <option [ngValue]="1">1 niveau : manager</option>
+          <option [ngValue]="2">2 niveaux : manager puis RH</option>
+        </select></label
+      >
+      <label class="pq-field"
+        ><span class="pq-label">Conservation des pointages (ans)</span>
+        <input
+          class="pq-input"
+          type="number"
+          min="1"
+          max="10"
+          name="ret1"
+          [ngModel]="form().retention_checkins_years"
+          (ngModelChange)="patch({ retention_checkins_years: +$event })"
+      /></label>
+      <label class="pq-field"
+        ><span class="pq-label">Conservation des positions GPS brutes (mois)</span>
+        <input
+          class="pq-input"
+          type="number"
+          min="1"
+          max="60"
+          name="ret2"
+          [ngModel]="form().retention_gps_months"
+          (ngModelChange)="patch({ retention_gps_months: +$event })"
+      /></label>
+    </div>
+    <label class="check"
+      ><input
+        type="checkbox"
+        name="wifi"
+        [ngModel]="form().wifi_check_enabled"
+        (ngModelChange)="patch({ wifi_check_enabled: $event })"
+      />
+      Exiger un Wi-Fi autorisé en second facteur</label
+    >
+    <label class="check"
+      ><input
+        type="checkbox"
+        name="breaks"
+        [ngModel]="form().break_checkins_enabled"
+        (ngModelChange)="patch({ break_checkins_enabled: $event })"
+      />
+      Activer le pointage des pauses</label
+    >
+
+    <button type="submit" class="pq-btn pq-btn-primary save" [disabled]="saving()">
+      Enregistrer
+    </button>
+  </form>
+}
