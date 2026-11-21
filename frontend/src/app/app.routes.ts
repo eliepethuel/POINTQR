@@ -8,7 +8,7 @@ export const routes: Routes = [
   {
     path: '',
     title: 'PointQR — Le pointage qui ne ment pas.',
-    loadComponent: () => import('./features/landing/hello-page').then((m) => m.HelloPage),
+    loadComponent: () => import('./features/landing/landing-page').then((m) => m.LandingPage),
   },
   {
     path: 'connexion',
