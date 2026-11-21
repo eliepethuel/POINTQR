@@ -89,6 +89,16 @@ def _dataset(company: Company, count: int) -> dict[str, Any]:
         username = f"agent{run}{i}"
         _user(company, username, [Role.AGENT], agent=agent, display_name=agent.full_name)
         agents.append({"username": username, "name": agent.full_name})
+    # EF-09: an agent without any account yet, invited by HR during the test.
+    newcomer = Agent(
+        employee_number=f"N{run}",
+        last_name=f"Nouveau{run[-5:]}",
+        first_names="Awa",
+        site=site,
+        schedule=schedule,
+    )
+    ensure_badge_key(newcomer)
+    newcomer.save()
     code, _ = create_pairing_code(site, f"Tablette {run}", actor=None)
     return {
         "company_code": company.code,
@@ -97,6 +107,7 @@ def _dataset(company: Company, count: int) -> dict[str, Any]:
         "hr": "rh",
         "staff": {"admin": "admin", "hr": "rh", "manager": "manager", "auditor": "auditeur"},
         "agents": agents,
+        "newcomer": {"name": newcomer.full_name, "username": newcomer.employee_number.lower()},
         "pairing_code": code,
         "site": {
             "id": str(site.id),
