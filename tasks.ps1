@@ -14,6 +14,7 @@
     openapi   export backend/openapi.yaml
     client    regenerate the typed Angular client from the schema
     seed      load demo data
+    docker-up | docker-down | docker-seed   full stack in containers on :8080 (ADR-0014)
 .EXAMPLE
   .\tasks.ps1 env; .\tasks.ps1 db-init; .\tasks.ps1 install; .\tasks.ps1 migrate; .\tasks.ps1 dev
 #>
@@ -21,7 +22,7 @@ param(
   [Parameter(Position = 0)]
   [ValidateSet('env', 'db-init', 'db-reset', 'install', 'migrate', 'dev', 'api', 'worker', 'beat', 'front',
     'redis', 'shell', 'seed', 'test', 'test-back', 'test-front', 'lint', 'lint-back', 'lint-front',
-    'format', 'openapi', 'client', 'e2e', 'help')]
+    'format', 'openapi', 'client', 'e2e', 'docker-up', 'docker-down', 'docker-seed', 'help')]
   [string]$Target = 'help'
 )
 $ErrorActionPreference = 'Stop'
@@ -64,6 +65,7 @@ function Initialize-Env {
     Replace('change-me-with-50-random-characters', (New-Secret 64)).
     Replace('change-me-owner', (New-Secret)).
     Replace('change-me-app', (New-Secret)).
+    Replace('change-me-superuser', (New-Secret)).
     Replace('FIELD_ENCRYPTION_KEY=', "FIELD_ENCRYPTION_KEY=$(New-FernetKey)")
   [IO.File]::WriteAllText($path, $text)  # UTF-8 without BOM
   Write-Host '.env created with random secrets.'
@@ -181,5 +183,8 @@ switch ($Target) {
   }
   'client'     { & $PSCommandPath openapi; Invoke-Checked $Frontend { npm run api:generate } }
   'e2e'        { Invoke-Checked $Frontend { npx playwright test } }
+  'docker-up'  { Invoke-Checked $Root { docker compose up -d --build } }
+  'docker-down' { Invoke-Checked $Root { docker compose down } }
+  'docker-seed' { Invoke-Checked $Root { docker compose --profile demo run --rm seed } }
   default      { Get-Help $PSCommandPath -Detailed }
 }
