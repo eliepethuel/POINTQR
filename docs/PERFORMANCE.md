@@ -41,9 +41,12 @@ Build de production servi en statique, Chrome mobile (Lighthouse) :
 | Mesure | Résultat | Cible |
 |---|---|---|
 | LCP | 0,73 s | < 2,5 s |
-| CLS | 0,00 | < 0,1 |
+| CLS (mobile, 4G lente, CPU ×4) | 0,02 | < 0,1 |
 | Accessibilité / SEO | 100 / 100 | ≥ 90 |
 | Bonnes pratiques | 96 | ≥ 90 |
 
 Le titre du héros est animé en `transform` seulement : il est peint dès la première image,
-GSAP et ScrollTrigger sont chargés après coup. Bundle initial : ~100 kB transférés.
+GSAP et ScrollTrigger sont chargés après coup.
+Sur mobile, le changement de police (`font-display: swap`) décalait tout le héros centré
+(CLS 0,26) : le héros est aligné en haut, le sur-titre a une hauteur réservée et les boutons
+prennent toute la largeur, ce qui ramène le CLS à 0,02. Bundle initial : ~100 kB transférés.
