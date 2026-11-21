@@ -15,6 +15,7 @@
 | `backend` | pointqr-api | uvicorn (ASGI : HTTP + WebSocket), `WEB_CONCURRENCY` workers, pool de connexions (ADR-0012) |
 | `worker`, `beat` | pointqr-api | Celery (rapports, notifications, purge de rétention) |
 | `web` | pointqr-web | nginx : application Angular + proxy `/api` et `/ws` vers `backend`, en-têtes de sécurité |
+| `storage` | chrislusf/seaweedfs | stockage S3 des rapports et justificatifs |
 | `mailpit` | axllent/mailpit | boîte de réception locale des e-mails (http://localhost:8025) |
 | `seed` (profil `demo`) | pointqr-api | données de démonstration |
 
@@ -29,11 +30,14 @@
    throttling (ENF-11).
 5. Les secrets viennent de `.env` (`tasks.ps1 env` / `make env`) ; le compose refuse de
    démarrer s'ils manquent.
-6. Les fichiers (rapports, justificatifs) sont sur un volume partagé par l'API et le worker ;
-   un stockage S3 s'active par `S3_ENDPOINT_URL` (ADR-0009, ticket PQR-012 pour le service).
+6. Les fichiers (rapports, justificatifs) sont sur **S3** : service `storage` (SeaweedFS,
+   ADR-0009), bucket créé par `migrate` (`manage.py ensure_storage`). Les téléchargements
+   passent par l'API (liens signés), le stockage n'est jamais exposé au navigateur. Retirer
+   `S3_ENDPOINT_URL` revient au volume partagé `media`.
 7. La **CI** construit les deux images, démarre la pile et vérifie : santé, page servie, CSP
    conforme aux scripts réels, routes profondes, erreurs RFC 7807, schéma OpenAPI, rôle
-   applicatif sans contournement RLS, worker Celery joignable.
+   applicatif sans contournement RLS, worker Celery joignable, écriture et lecture sur S3, puis
+   les **tests de bout en bout** Playwright contre cette pile (build de production derrière nginx).
 
 ## Conséquences
 HTTPS se place devant le service `web` en production (répartiteur ou proxy de l'hébergeur) ;
