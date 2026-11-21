@@ -19,6 +19,8 @@ CELERY_TASK_EAGER_PROPAGATES = True
 OTP_TOTP_THROTTLE_FACTOR = 0
 # Async tests (WebSocket) run queries in worker threads: never keep their connections open.
 DATABASES["default"]["CONN_MAX_AGE"] = 0
+# The test runner creates/destroys its database: plain connections, no pool.
+DATABASES["default"].get("OPTIONS", {}).pop("pool", None)
 import tempfile  # noqa: E402
 from pathlib import Path  # noqa: E402
 
