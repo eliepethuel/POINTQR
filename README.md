@@ -32,6 +32,8 @@ entreprises de Côte d'Ivoire, sans aucune donnée biométrique.
 - **Sécurité** : JWT court + refresh en cookie HttpOnly, TOTP obligatoire pour admin/RH/éditeur,
   verrouillage après 5 échecs, journal d'audit en ajout seul, erreurs RFC 7807.
 
+> Pas à pas détaillé (Docker ou natif, téléphone, dépannage) : **[docs/DEMARRAGE.md](docs/DEMARRAGE.md)**.
+
 ## Prérequis
 
 - [uv](https://docs.astral.sh/uv/) (installe Python 3.13 automatiquement)
@@ -138,6 +140,7 @@ transaction (ADR-0012).
 
 ## Documentation
 
+- **[Lancer le projet](docs/DEMARRAGE.md)** : Docker ou natif, pas à pas, et problèmes fréquents
 - **[Guide d'utilisation](docs/GUIDE_UTILISATEUR.md)** : chaque écran, par rôle, et les motifs de refus
 - [Plan de réalisation](docs/PLAN.md)
 - [Décisions d'architecture](docs/adr/)
