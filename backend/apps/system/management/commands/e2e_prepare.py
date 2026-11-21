@@ -57,8 +57,15 @@ def _dataset(company: Company, count: int) -> dict[str, Any]:
     schedule = Schedule.objects.first() or Schedule.objects.create(
         name="Journée", start_time=clock(7, 30), end_time=clock(16, 30)
     )
-    if not User.objects.filter(username="rh").exists():
-        _user(company, "rh", [Role.HR], display_name="RH E2E")
+    staff = {
+        "admin": [Role.COMPANY_ADMIN],
+        "rh": [Role.HR],
+        "manager": [Role.MANAGER],
+        "auditeur": [Role.AUDITOR],
+    }
+    for username, roles in staff.items():
+        if not User.objects.filter(username=username).exists():
+            _user(company, username, roles, display_name=f"{username} E2E")
     kiosk = Kiosk.objects.filter(site=site, name="Borne de test").first() or Kiosk.objects.create(
         site=site,
         name="Borne de test",
@@ -88,6 +95,7 @@ def _dataset(company: Company, count: int) -> dict[str, Any]:
         "password": DEMO_PASSWORD,
         "totp_secret": DEMO_TOTP_SECRET,
         "hr": "rh",
+        "staff": {"admin": "admin", "hr": "rh", "manager": "manager", "auditor": "auditeur"},
         "agents": agents,
         "pairing_code": code,
         "site": {
