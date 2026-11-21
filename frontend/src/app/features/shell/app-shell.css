@@ -180,3 +180,13 @@
     display: none;
   }
 }
+.search {
+  color: var(--pq-text-muted);
+  gap: 10px;
+}
+.search kbd {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--pq-surface-2);
+  font: 0.75rem var(--pq-font-mono);
+}

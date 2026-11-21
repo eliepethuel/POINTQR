@@ -18,6 +18,7 @@ import {
 import { Session } from '../../core/auth/session';
 import { ThemeService } from '../../core/theme/theme';
 import { Toaster } from '../../shared/ui/toast';
+import { CommandPalette } from './command-palette';
 import { NAV, type NavItem, PLATFORM_NAV, SECTION_LABELS } from './nav';
 
 const COLLAPSE_KEY = 'pq.sidebar';
@@ -34,6 +35,7 @@ const COLLAPSE_KEY = 'pq.sidebar';
     LucideSun,
     LucidePanelLeft,
     Toaster,
+    CommandPalette,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.html',
@@ -54,6 +56,8 @@ export class AppShell {
       .map((s) => ({ label: SECTION_LABELS[s], items: items.filter((i) => i.section === s) }))
       .filter((s) => s.items.length > 0);
   });
+
+  protected readonly flatItems = computed(() => this.sections().flatMap((s) => s.items));
 
   protected readonly initials = computed(() => {
     const name = this.session.user()?.display_name || this.session.user()?.username || '?';
