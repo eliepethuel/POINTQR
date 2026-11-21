@@ -131,6 +131,7 @@ Sous Linux ou macOS, il n'y a pas de `dev` : lancez `make api`, `make worker`, `
 | Commande | Rôle |
 |---|---|
 | `.\tasks.ps1 test` | tous les tests : pytest (backend) et Vitest (frontend) |
+| `.\tasks.ps1 e2e` | tests de bout en bout dans un navigateur (Playwright), avec `dev` lancé : borne, pointage, refus, invitation, chaque page de chaque rôle |
 | `.\tasks.ps1 lint` | ruff, mypy, ESLint, Prettier |
 | `.\tasks.ps1 format` | reformate le code |
 | `.\tasks.ps1 client` | régénère le schéma OpenAPI puis le client Angular, à faire après un changement d'API |

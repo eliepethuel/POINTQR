@@ -116,6 +116,7 @@ aussitôt sur le tableau de bord.
 | Commande | Rôle |
 |---|---|
 | `test`, `test-back`, `test-front` | tests (pytest + couverture, Vitest) |
+| `e2e` | tests de bout en bout dans le navigateur (Playwright), sur la pile lancée |
 | `lint`, `format` | ruff, mypy, ESLint, Prettier |
 | `openapi` | exporte `backend/openapi.yaml`, le contrat d'API |
 | `client` | régénère le client Angular typé (`frontend/src/app/api/`, jamais modifié à la main) |
@@ -132,6 +133,7 @@ aussitôt sur le tableau de bord.
 | R8 — aucune route ne renvoie un objet d'une autre entreprise | `backend/tests/test_r8_isolation.py` (toutes les routes) |
 | R9 — rapport mensuel de 500 agents en moins de 30 s | `backend/apps/reports/tests/test_reports.py` |
 | R10 — 2 000 pointages/min, p95 < 500 ms | `infra/locust/locustfile.py`, résultats dans [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
+| R1, R2, R3, R7 dans le navigateur, invitation (EF-09), chaque page de chaque rôle | `frontend/e2e/` (Playwright), exécutés en CI contre la pile Docker |
 
 ## Sécurité multi-entreprises
 
