@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   resource,
@@ -13,10 +14,13 @@ import { Api } from '../../api/api';
 import { reportsCreate } from '../../api/fn/reports/reports-create';
 import { reportsList } from '../../api/fn/reports/reports-list';
 import type { ReportKindEnum } from '../../api/models/report-kind-enum';
+import { Session } from '../../core/auth/session';
 import { problemMessage } from '../../core/http/problem';
 import { RevealOnScroll } from '../../shared/motion';
 import { PageHeader } from '../../shared/ui/page-header';
 import { ToastService } from '../../shared/ui/toast';
+import { PeriodsPanel } from './periods-panel';
+import { SchedulesPanel } from './schedules-panel';
 
 const KINDS: { value: ReportKindEnum; label: string; hint: string }[] = [
   {
@@ -58,7 +62,7 @@ function monthRange(): { start: string; end: string } {
 /** Reports in one click, generated in the background with live progress (EF-34 to EF-36). */
 @Component({
   selector: 'pq-reports-page',
-  imports: [DatePipe, FormsModule, PageHeader, RevealOnScroll],
+  imports: [DatePipe, FormsModule, PageHeader, PeriodsPanel, RevealOnScroll, SchedulesPanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <pq-page-header
@@ -124,8 +128,21 @@ function monthRange(): { start: string; end: string } {
         </article>
       }
     </section>
+
+    <div class="panels">
+      <pq-schedules-panel [kinds]="scheduledKinds" />
+      @if (canClose()) {
+        <pq-periods-panel />
+      }
+    </div>
   `,
   styles: `
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
     .form {
       display: grid;
       gap: 16px;
@@ -208,7 +225,10 @@ function monthRange(): { start: string; end: string } {
 export class ReportsPage {
   private readonly api = inject(Api);
   private readonly toast = inject(ToastService);
+  private readonly session = inject(Session);
   protected readonly kinds = KINDS;
+  protected readonly scheduledKinds = KINDS.filter((k) => k.value !== 'badges');
+  protected readonly canClose = computed(() => this.session.hasRole('company_admin', 'hr'));
   protected kind: ReportKindEnum = 'punctuality';
   protected start = monthRange().start;
   protected end = monthRange().end;

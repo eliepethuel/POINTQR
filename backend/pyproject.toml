@@ -1,6 +1,6 @@
 [project]
 name = "pointqr-backend"
-version = "0.1.0"
+version = "1.0.0"
 description = "PointQR API — dynamic QR code attendance platform"
 requires-python = ">=3.13"
 dependencies = [
@@ -21,6 +21,7 @@ dependencies = [
     "djangorestframework-simplejwt>=5.5.1",
     "drf-spectacular>=0.30.0",
     "openpyxl>=3.1.5",
+    "packaging>=25.0",
     "psycopg[binary,pool]>=3.3.9",
     "redis>=8.1.0",
     "reportlab>=5.1.0",

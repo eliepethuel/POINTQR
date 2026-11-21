@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: PointQR API
-  version: 0.1.0
+  version: 1.0.0
   description: API de pointage par QR code dynamique — « Le pointage qui ne ment pas.
     »
 paths:
@@ -1524,8 +1524,8 @@ paths:
   /api/v1/periods/{id}/close/:
     post:
       operationId: periods_close
-      description: Monthly closing for payroll; reopening is traced in the audit log
-        (RG-14).
+      description: Recomputes the month then freezes it, in the background (a few
+        minutes per 100 agents).
       parameters:
       - in: path
         name: id
@@ -1539,7 +1539,7 @@ paths:
       security:
       - jwtAuth: []
       responses:
-        '200':
+        '202':
           content:
             application/json:
               schema:

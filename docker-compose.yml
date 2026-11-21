@@ -1,0 +1,122 @@
+# PointQR full stack (ADR-0014). Reads secrets from .env (`tasks.ps1 env` / `make env`).
+#   docker compose up -d --build          → http://localhost:8080
+#   docker compose --profile demo run --rm seed
+name: pointqr
+
+x-app: &app
+  build:
+    context: ./backend
+  image: pointqr-api:${APP_VERSION:-local}
+  restart: unless-stopped
+  environment: &app-env
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?run tasks.ps1 env first}
+    DJANGO_ALLOWED_HOSTS: localhost,.localhost,127.0.0.1,backend
+    CSRF_TRUSTED_ORIGINS: http://localhost:8080,http://*.localhost:8080
+    # Plain HTTP on the local machine; put TLS in front of the web container in production.
+    SECURE_SSL_REDIRECT: "false"
+    APP_VERSION: ${APP_VERSION:-1.0.0}
+    FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:?run tasks.ps1 env first}
+    DATABASE_URL: postgres://${APP_DB_USER:-pointqr_app}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-pointqr}
+    MIGRATION_DATABASE_URL: postgres://${POSTGRES_OWNER_USER:-pointqr_owner}:${POSTGRES_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-pointqr}
+    REDIS_URL: redis://redis:6379/0
+    EMAIL_URL: smtp://mailpit:1025
+    NUM_PROXIES: "1"
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  volumes:
+    - media:/app/media
+  depends_on: &app-deps
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?run tasks.ps1 env first}
+      POINTQR_DB: ${POSTGRES_DB:-pointqr}
+      POINTQR_OWNER_USER: ${POSTGRES_OWNER_USER:-pointqr_owner}
+      POINTQR_OWNER_PASSWORD: ${POSTGRES_OWNER_PASSWORD}
+      POINTQR_APP_USER: ${APP_DB_USER:-pointqr_app}
+      POINTQR_APP_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/docker-init:/docker-entrypoint-initdb.d:ro
+      - ./infra/postgres/create-roles.sql:/pointqr/create-roles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-pointqr}"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  # Catches every e-mail sent by the platform: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports: ["127.0.0.1:8025:8025"]
+
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["sh", "-c", "DATABASE_URL=$$MIGRATION_DATABASE_URL python manage.py migrate --noinput"]
+
+  backend:
+    <<: *app
+    depends_on:
+      <<: *app-deps
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app
+    command: ["celery", "-A", "config", "worker", "-l", "info", "--concurrency", "2"]
+    healthcheck:
+      disable: true
+    depends_on:
+      <<: *app-deps
+      migrate:
+        condition: service_completed_successfully
+
+  beat:
+    <<: *app
+    command: ["celery", "-A", "config", "beat", "-l", "info", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler"]
+    healthcheck:
+      disable: true
+    depends_on:
+      <<: *app-deps
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./frontend
+    image: pointqr-web:${APP_VERSION:-local}
+    restart: unless-stopped
+    ports: ["${WEB_PORT:-8080}:8080"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Demo dataset (a few minutes): docker compose --profile demo run --rm seed
+  seed:
+    <<: *app
+    profiles: [demo]
+    restart: "no"
+    command: ["sh", "-c", "DATABASE_URL=$$MIGRATION_DATABASE_URL python manage.py seed_demo"]
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
