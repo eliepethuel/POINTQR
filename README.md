@@ -102,7 +102,7 @@ secret `PQRDEMOPQRDEMOPQRDEMOPQRDEMOPQRD` à une application d'authentification.
 | PME Y (`PMEY`) | `admin`, `agent` | administrateur, agent |
 | — | `editeur` | équipe PointQR (super-admin) |
 
-Parcours conseillé : connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code
+Parcours conseillé (détaillé dans le [guide d'utilisation](docs/GUIDE_UTILISATEUR.md#16-essayer-avec-les-données-de-démonstration)) : connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code
 d'appairage et saisissez-le sur `/kiosk` ; connectez-vous en `agent` sur `/agent` dans un autre
 navigateur ou un téléphone, liez le téléphone et scannez le QR de la borne. Le pointage apparaît
 aussitôt sur le tableau de bord.
@@ -138,6 +138,7 @@ transaction (ADR-0012).
 
 ## Documentation
 
+- **[Guide d'utilisation](docs/GUIDE_UTILISATEUR.md)** : chaque écran, par rôle, et les motifs de refus
 - [Plan de réalisation](docs/PLAN.md)
 - [Décisions d'architecture](docs/adr/)
 - [Backlog](docs/BACKLOG.md)
