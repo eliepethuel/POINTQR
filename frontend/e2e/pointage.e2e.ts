@@ -3,6 +3,7 @@ import { type Page, expect, test } from '@playwright/test';
 import {
   type E2EData,
   type Phone,
+  clearCamera,
   currentWindow,
   data,
   kioskToken,
@@ -41,6 +42,7 @@ test.describe.serial('Pointage de bout en bout', () => {
     const dialog = p.getByRole('alertdialog');
     await expect(dialog).toBeVisible({ timeout: 20_000 });
     const text = await dialog.innerText();
+    await clearCamera(p); // the agent lowers the phone
     await dialog.getByRole('button', { name: 'Terminé' }).click();
     return text;
   }
@@ -67,12 +69,14 @@ test.describe.serial('Pointage de bout en bout', () => {
   }) => {
     agentA = await phone(browser, d);
     await activate(agentA.page, d.agents[0]!.username);
-    // Like a real phone filming the tablet: keep showing fresh frames of the kiosk screen
-    // (a frame caught during the 30 s QR change is unreadable, the next one is fine).
+    // The phone camera sees exactly what the kiosk draws: its canvas, read pixel for pixel
+    // (a page screenshot can catch the element while it moves). New frames keep coming, like
+    // a phone filming the tablet across a 30 s QR change.
     const qr = kiosk.getByRole('img', { name: /QR code de pointage/ });
     const dialog = agentA.page.getByRole('alertdialog');
     for (let i = 0; i < 10 && !(await dialog.isVisible()); i++) {
-      await showToCamera(agentA.page, { png: await qr.screenshot() });
+      const dataUrl = await qr.evaluate((c: HTMLCanvasElement) => c.toDataURL('image/png'));
+      await showToCamera(agentA.page, { png: Buffer.from(dataUrl.split(',')[1]!, 'base64') });
       await dialog.waitFor({ timeout: 2_000 }).catch(() => undefined);
     }
     const text = await result(agentA.page);

@@ -12,6 +12,7 @@ export interface E2EData {
   hr: string;
   staff: { admin: string; hr: string; manager: string; auditor: string };
   agents: { username: string; name: string }[];
+  newcomer: { username: string; name: string };
   pairing_code: string;
   site: { id: string; latitude: number; longitude: number };
   kiosk: { id: string; key: string };
@@ -122,6 +123,15 @@ export async function phone(
   });
   await context.addInitScript(FAKE_CAMERA);
   return { context, page: await context.newPage() };
+}
+
+/** Points the phone camera at a blank wall (nothing to read). */
+export async function clearCamera(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    (window as unknown as { __pqShow(s: string): Promise<boolean> }).__pqShow(
+      'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
+    ),
+  );
 }
 
 /** Shows a QR (PNG data URL or token text) to the phone camera. */
