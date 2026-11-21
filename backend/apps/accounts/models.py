@@ -7,6 +7,8 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from common.models import TenantModel
+
 
 class Role(models.TextChoices):
     COMPANY_ADMIN = "company_admin", "Administrateur entreprise"
@@ -104,3 +106,20 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label: str) -> bool:
         return False
+
+
+class ActivationInvite(TenantModel):
+    """Single-use activation link sent to an agent (EF-09). Only the SHA-256 of the token is kept."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="invites")
+    token_hash = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    sent_to = models.EmailField(blank=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        verbose_name = "invitation d'activation"
+        indexes = [models.Index(fields=["user", "used_at"])]
