@@ -40,7 +40,8 @@ entreprises de Côte d'Ivoire, sans aucune donnée biométrique.
 - Un serveur compatible Redis : [Garnet](https://microsoft.github.io/garnet/) sous Windows
   (`dotnet tool install --global garnet-server`), Redis 7 sous Linux/macOS
 
-Le développement se fait en natif ; les conteneurs sont décrits plus bas (ADR-0010).
+Le développement se fait en natif ; pour lancer toute la plateforme en conteneurs, voir
+« Avec Docker » (seuls Docker et un fichier `.env` sont alors nécessaires).
 
 ## Installation
 
@@ -67,6 +68,23 @@ Linux / macOS : mêmes cibles avec `make` (`make env db-init install migrate see
 | http://localhost:4200/plateforme | Espace éditeur (super-admin) |
 | http://localhost:8000/api/docs/ | Documentation de l'API (Swagger) |
 | http://localhost:8000/api/schema/ | Schéma OpenAPI 3 |
+
+## Avec Docker
+
+```powershell
+.	asks.ps1 env           # ou make env : .env avec des secrets aléatoires
+.	asks.ps1 docker-up     # docker compose up -d --build
+.	asks.ps1 docker-seed   # données de démonstration (quelques minutes)
+```
+
+| URL | Service |
+|---|---|
+| http://localhost:8080 | application (site vitrine, back-office, borne, agent) et API sous `/api/` |
+| http://localhost:8025 | e-mails envoyés (Mailpit) |
+
+Services : PostgreSQL 16, Redis 7, migrations, API (uvicorn), worker et beat Celery, nginx,
+Mailpit. Détails et choix de sécurité : [ADR-0014](docs/adr/0014-containerised-stack.md).
+Arrêt : `.	asks.ps1 docker-down` (les volumes de données sont conservés).
 
 ## Comptes de démonstration
 
@@ -98,6 +116,7 @@ aussitôt sur le tableau de bord.
 | `openapi` | exporte `backend/openapi.yaml`, le contrat d'API |
 | `client` | régénère le client Angular typé (`frontend/src/app/api/`, jamais modifié à la main) |
 | `db-reset` | recrée la base vide |
+| `docker-up`, `docker-down`, `docker-seed` | pile complète en conteneurs |
 
 ## Recette
 
