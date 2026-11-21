@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
   },
   {
+    path: 'activation',
+    title: 'Activer mon accès · PointQR',
+    loadComponent: () => import('./features/auth/activation-page').then((m) => m.ActivationPage),
+  },
+  {
     path: 'kiosk',
     title: 'Borne · PointQR',
     loadComponent: () => import('./kiosk/kiosk-page').then((m) => m.KioskPage),

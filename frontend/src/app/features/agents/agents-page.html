@@ -1,5 +1,8 @@
 <pq-page-header title="Agents" eyebrow="Organisation" [subtitle]="total() + ' agents'">
   @if (canEdit()) {
+    <button type="button" class="pq-btn" (click)="inviteAll()" [disabled]="inviting()">
+      Inviter les agents
+    </button>
     <a class="pq-btn" routerLink="/app/agents/import">Importer Excel / CSV</a>
     <button type="button" class="pq-btn pq-btn-primary" (click)="edit()">Nouvel agent</button>
   }
@@ -29,7 +32,7 @@
   } @else {
     <div class="row head" role="row">
       <span>Matricule</span><span>Nom</span><span class="hide-sm">Fonction</span>
-      <span class="hide-sm">Unité</span><span class="hide-sm">Site</span><span>Téléphone</span>
+      <span class="hide-sm">Unité</span><span class="hide-sm">Site</span><span>Accès</span>
     </div>
     <cdk-virtual-scroll-viewport
       itemSize="56"
@@ -59,10 +62,23 @@
         <span class="hide-sm muted">{{ agent.org_unit_name || '—' }}</span>
         <span class="hide-sm muted">{{ agent.site_name || '—' }}</span>
         <span>
-          @if (agent.has_device) {
-            <span class="pq-badge pq-badge-success">lié</span>
-          } @else {
-            <span class="pq-badge">à activer</span>
+          @switch (access(agent)) {
+            @case ('bound') {
+              <span class="pq-badge pq-badge-success" title="Compte activé, téléphone lié"
+                >lié</span
+              >
+            }
+            @case ('active') {
+              <span class="pq-badge" title="Compte activé, téléphone pas encore lié">à lier</span>
+            }
+            @case ('invited') {
+              <span class="pq-badge" title="Lien d'activation envoyé">invité</span>
+            }
+            @default {
+              <span class="pq-badge pq-badge-danger" title="Aucun accès à l'application"
+                >à inviter</span
+              >
+            }
           }
         </span>
       </button>
@@ -96,6 +112,37 @@
         <dt>E-mail</dt>
         <dd>{{ agent.email || '—' }}</dd>
       </dl>
+      <h3>Accès à l'application</h3>
+      <p class="muted">{{ accessLabel(agent) }}</p>
+      @if (canEdit() && agent.account !== 'active' && agent.status === 'active') {
+        <button
+          type="button"
+          class="pq-btn pq-btn-primary"
+          (click)="invite(agent)"
+          [disabled]="inviting()"
+        >
+          {{ agent.account === 'invited' ? 'Renvoyer l’invitation' : 'Inviter l’agent' }}
+        </button>
+      }
+      @if (invitation(); as inv) {
+        <div class="invitation pq-pop-in">
+          <p>
+            Identifiant : <strong class="pq-mono">{{ inv.username }}</strong>
+            @if (inv.sent_to) {
+              — lien envoyé à <strong>{{ inv.sent_to }}</strong>.
+            } @else {
+              — pas d'e-mail : faites scanner ce QR par l'agent avec son téléphone.
+            }
+          </p>
+          <pq-qr-canvas class="invite-qr" [value]="inv.link" label="Lien d'activation de l'agent" />
+          <button type="button" class="pq-btn pq-btn-sm" (click)="copy(inv.link)">
+            Copier le lien
+          </button>
+          <p class="muted">
+            Lien personnel, valable jusqu'au {{ inv.expires_at | date: 'dd/MM/yyyy' }}.
+          </p>
+        </div>
+      }
       <h3>Téléphone lié</h3>
       @for (device of devices.value() ?? []; track device.id) {
         <p class="device">
@@ -107,7 +154,7 @@
           }
         </p>
       } @empty {
-        <p class="muted">Aucun téléphone lié : l'agent l'activera à sa première connexion.</p>
+        <p class="muted">Aucun téléphone lié : il sera lié à la première connexion de l'agent.</p>
       }
       <div class="actions">
         <a class="pq-btn" [routerLink]="['/app/agents', agent.id]">Fiche complète</a>
