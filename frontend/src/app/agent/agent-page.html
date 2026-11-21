@@ -48,7 +48,9 @@
               Prochain pointage :
               <strong>{{ st.next_direction === 'in' ? 'entrée' : 'sortie' }}</strong>
             </p>
-            <pq-qr-scanner (scanned)="onScan($event)" />
+            <!-- Same code re-read after 8 s at most: no burst of identical answers, yet a static site
+                 QR (mode D) can be scanned again once the agent has walked into the zone. -->
+            <pq-qr-scanner [cooldownMs]="8000" (scanned)="onScan($event)" />
             <p class="hint">
               Visez le QR code de la borne.
               <span class="geo">Votre position est lue uniquement au moment du pointage.</span>
