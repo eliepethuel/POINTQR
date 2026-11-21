@@ -129,12 +129,38 @@ jobs:
             sleep 5
           done
           exit 1
+      - name: Files are stored on S3 (write, read back, delete)
+        run: docker compose exec -T backend python manage.py ensure_storage --probe
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24.22.3"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Playwright
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: End-to-end tests in the browser, against the containerised stack
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://localhost:8080
+          E2E_PREPARE: docker compose exec -T -e POINTQR_E2E=1 backend python manage.py e2e_prepare
+          E2E_PREPARE_CWD: ${{ github.workspace }}
+        run: npx playwright test
+      - name: Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
       - name: Logs on failure
         if: failure()
         run: |
           docker compose ps -a
           docker compose logs --tail 200
           # Also as annotations, readable without signing in to GitHub.
-          for svc in worker beat backend migrate; do
+          for svc in worker beat backend migrate storage; do
             docker compose logs --no-color "$svc" 2>&1 | grep -E "Error|Exception|error:" | tail -4 | sed "s/^/::error title=$svc::/"
           done

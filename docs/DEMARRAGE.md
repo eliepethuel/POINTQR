@@ -64,8 +64,9 @@ docker compose logs -f backend    # journaux de l'API (ou worker, beat, web, pos
 Pour **tout effacer** et repartir de zéro (base, fichiers, Redis) : `docker compose down -v`.
 Attention, cette commande est irréversible.
 
-Services démarrés : `postgres`, `redis`, `migrate` (s'arrête une fois les migrations faites),
-`backend`, `worker`, `beat`, `web` et `mailpit`. Les détails sont dans
+Services démarrés : `postgres`, `redis`, `storage` (S3 pour les rapports et justificatifs),
+`migrate` (migrations et création du bucket, puis s'arrête), `backend`, `worker`, `beat`, `web`
+et `mailpit`. Les détails sont dans
 [ADR-0014](adr/0014-containerised-stack.md).
 
 ---
