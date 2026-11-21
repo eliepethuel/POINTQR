@@ -133,7 +133,10 @@ def _hourly_arrivals(day: date, tz: ZoneInfo, unit_ids: set[UUID] | None) -> lis
     buckets: dict[int, int] = defaultdict(int)
     for ts in qs.values_list("effective_ts", flat=True):
         buckets[ts.astimezone(tz).hour] += 1
-    return [{"hour": h, "count": buckets.get(h, 0)} for h in range(5, 21)]
+    # Office hours by default, widened to every hour that had arrivals (night shifts, RG-08).
+    first = min([5, *buckets])
+    last = max([20, *buckets])
+    return [{"hour": h, "count": buckets.get(h, 0)} for h in range(first, last + 1)]
 
 
 def unit_ranking(start: date, end: date, unit_ids: set[UUID] | None = None) -> list[dict[str, Any]]:
