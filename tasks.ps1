@@ -41,7 +41,11 @@ function Invoke-Checked([string]$Dir, [scriptblock]$Block) {
 }
 
 function New-Secret([int]$Length = 40) {
-  -join ((48..57) + (97..122) | Get-Random -Count $Length | ForEach-Object { [char]$_ })
+  # Cryptographic random, with repetition (Get-Random -Count capped secrets at 36 characters).
+  $alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  $bytes = New-Object byte[] $Length
+  [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+  -join ($bytes | ForEach-Object { $alphabet[$_ % $alphabet.Length] })
 }
 
 function New-FernetKey {
@@ -66,6 +70,8 @@ function Initialize-Env {
     Replace('change-me-owner', (New-Secret)).
     Replace('change-me-app', (New-Secret)).
     Replace('change-me-superuser', (New-Secret)).
+    Replace('change-me-s3-access', (New-Secret 20)).
+    Replace('change-me-s3-secret', (New-Secret 40)).
     Replace('FIELD_ENCRYPTION_KEY=', "FIELD_ENCRYPTION_KEY=$(New-FernetKey)")
   [IO.File]::WriteAllText($path, $text)  # UTF-8 without BOM
   Write-Host '.env created with random secrets.'

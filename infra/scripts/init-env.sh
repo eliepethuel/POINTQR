@@ -11,6 +11,9 @@ sed \
   -e "s/change-me-with-50-random-characters/$(secret 64)/" \
   -e "s/change-me-owner/$(secret 32)/g" \
   -e "s/change-me-app/$(secret 32)/g" \
+  -e "s/change-me-superuser/$(secret 32)/g" \
+  -e "s/change-me-s3-access/$(secret 20)/g" \
+  -e "s/change-me-s3-secret/$(secret 40)/g" \
   -e "s|^FIELD_ENCRYPTION_KEY=$|FIELD_ENCRYPTION_KEY=$(fernet)|" \
   .env.example > .env
 echo ".env created with random secrets."
