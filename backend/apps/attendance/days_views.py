@@ -1,11 +1,11 @@
 """Work days, periods (RG-14) and the live dashboard API."""
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 from uuid import UUID
 
+from django.db import transaction
 from django.db.models import Count, Q, QuerySet, Sum
-from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
@@ -204,18 +204,17 @@ class PeriodViewSet(
             raise DomainError("Cette période existe déjà.", code="period_exists", status_code=409)
         serializer.save(month=month)
 
-    @extend_schema(operation_id="periods_close", request=None, responses=PeriodSerializer)
+    @extend_schema(operation_id="periods_close", request=None, responses={202: PeriodSerializer})
     @action(detail=True, methods=["post"])
     def close(self, request: Request, pk: Any = None) -> Response:
+        """Recomputes the month then freezes it, in the background (a few minutes per 100 agents)."""
+        from .tasks import close_period
+
         period = self.get_object()
-        last = (period.month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-        workdays.recompute_range(period.month, min(last, timezone.localdate()))
-        period.status = Period.Status.CLOSED
-        period.closed_at = timezone.now()
-        period.closed_by = request.user  # type: ignore[assignment]
-        period.save()
-        record("period.closed", period, actor=request.user, request=request._request)
-        return Response(PeriodSerializer(period).data)
+        if period.status != Period.Status.CLOSED:
+            company_id, user_id = str(period.company_id), str(request.user.pk)
+            transaction.on_commit(lambda: close_period.delay(company_id, str(period.id), user_id))
+        return Response(PeriodSerializer(period).data, status=202)
 
     @extend_schema(
         operation_id="periods_reopen", request=ReopenSerializer, responses=PeriodSerializer
