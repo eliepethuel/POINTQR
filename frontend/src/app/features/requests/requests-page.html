@@ -65,10 +65,20 @@
             placeholder="Commentaire (optionnel)"
             aria-label="Commentaire"
           />
-          <button type="button" class="pq-btn pq-btn-primary pq-btn-sm" (click)="decide(req, true)">
+          <button
+            type="button"
+            class="pq-btn pq-btn-primary pq-btn-sm"
+            [disabled]="deciding() === req.id"
+            (click)="decide(req, true)"
+          >
             Valider
           </button>
-          <button type="button" class="pq-btn pq-btn-danger pq-btn-sm" (click)="decide(req, false)">
+          <button
+            type="button"
+            class="pq-btn pq-btn-danger pq-btn-sm"
+            [disabled]="deciding() === req.id"
+            (click)="decide(req, false)"
+          >
             Refuser
           </button>
         </div>
