@@ -14,20 +14,45 @@
 
     @if (!bound()) {
       <section class="pq-card activate pq-pop-in">
-        <h2>Activez ce téléphone</h2>
-        <p class="muted">
-          Un seul téléphone peut pointer pour vous. Après activation, un changement de téléphone
-          devra être validé par le service RH.
-        </p>
-        @if (!activationPending()) {
-          <button
-            type="button"
-            class="pq-btn pq-btn-highlight big"
-            (click)="activate()"
-            [disabled]="busy()"
-          >
-            Activer ce téléphone
-          </button>
+        @switch (phoneState()) {
+          @case ('change_pending') {
+            <h2>Changement de téléphone demandé</h2>
+            <p class="muted">
+              Le service RH doit valider ce nouveau téléphone. Dès sa validation, vous pourrez
+              pointer avec lui ; en attendant, utilisez votre ancien téléphone ou votre badge.
+            </p>
+            <button type="button" class="pq-btn big" (click)="status.reload()">Vérifier</button>
+          }
+          @case ('other') {
+            <h2>Un autre téléphone est lié à votre compte</h2>
+            <p class="muted">
+              Un seul téléphone peut pointer pour vous. Pour utiliser celui-ci, demandez le
+              changement : le service RH devra le valider.
+            </p>
+            <button
+              type="button"
+              class="pq-btn pq-btn-highlight big"
+              (click)="activate()"
+              [disabled]="busy()"
+            >
+              Demander le changement
+            </button>
+          }
+          @default {
+            <h2>Activez ce téléphone</h2>
+            <p class="muted">
+              Un seul téléphone peut pointer pour vous. Après activation, un changement de téléphone
+              devra être validé par le service RH.
+            </p>
+            <button
+              type="button"
+              class="pq-btn pq-btn-highlight big"
+              (click)="activate()"
+              [disabled]="busy()"
+            >
+              Activer ce téléphone
+            </button>
+          }
         }
       </section>
     } @else {
