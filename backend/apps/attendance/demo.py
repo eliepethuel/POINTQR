@@ -86,6 +86,11 @@ def add_history(demo: Any, rng: random.Random) -> None:
     devices = _devices(demo.agents, rng)
     now = timezone.now().astimezone(tz)
     start = now.date() - timedelta(days=DAYS)
+    # The demo agents « joined » before the generated history (no absence before joining).
+    joined = datetime.combine(start - timedelta(days=1), datetime.min.time(), tzinfo=tz)
+    Agent.objects.filter(id__in=[a.id for a in demo.agents]).update(created_at=joined)
+    for agent in demo.agents:
+        agent.created_at = joined
     rows: list[CheckIn] = []
     day = start
     while day <= now.date():
