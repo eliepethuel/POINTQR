@@ -14,7 +14,7 @@ environ.Env.read_env(BASE_DIR.parent / ".env", overwrite=False)
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS: list[str] = env.list("DJANGO_ALLOWED_HOSTS", default=[])
-APP_VERSION = env("APP_VERSION", default="0.1.0")
+APP_VERSION = env("APP_VERSION", default="1.0.0")
 
 INSTALLED_APPS = [
     "django.contrib.auth",
