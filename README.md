@@ -84,8 +84,8 @@ Linux / macOS : mêmes cibles avec `make` (`make env db-init install migrate see
 | http://localhost:8080 | application (site vitrine, back-office, borne, agent) et API sous `/api/` |
 | http://localhost:8025 | e-mails envoyés (Mailpit) |
 
-Services : PostgreSQL 16, Redis 7, migrations, API (uvicorn), worker et beat Celery, nginx,
-Mailpit. Détails et choix de sécurité : [ADR-0014](docs/adr/0014-containerised-stack.md).
+Services : PostgreSQL 16, Redis 7, stockage S3 (SeaweedFS), migrations, API (uvicorn), worker
+et beat Celery, nginx, Mailpit. Détails et choix de sécurité : [ADR-0014](docs/adr/0014-containerised-stack.md).
 Arrêt : `.	asks.ps1 docker-down` (les volumes de données sont conservés).
 
 ## Comptes de démonstration
@@ -104,9 +104,11 @@ secret `PQRDEMOPQRDEMOPQRDEMOPQRDEMOPQRD` à une application d'authentification.
 | PME Y (`PMEY`) | `admin`, `agent` | administrateur, agent |
 | — | `editeur` | équipe PointQR (super-admin) |
 
-Parcours conseillé (détaillé dans le [guide d'utilisation](docs/GUIDE_UTILISATEUR.md#16-essayer-avec-les-données-de-démonstration)) : connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code
-d'appairage et saisissez-le sur `/kiosk` ; connectez-vous en `agent` sur `/agent` dans un autre
-navigateur ou un téléphone, liez le téléphone et scannez le QR de la borne. Le pointage apparaît
+Parcours conseillé (détaillé dans le
+[guide d'utilisation](docs/GUIDE_UTILISATEUR.md#16-essayer-avec-les-données-de-démonstration)) :
+connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code d'appairage et saisissez-le sur
+`/kiosk` ; dans **Agents**, invitez un agent et scannez son QR d'activation avec un téléphone,
+choisissez un mot de passe, liez le téléphone et scannez le QR de la borne. Le pointage apparaît
 aussitôt sur le tableau de bord.
 
 ## Commandes utiles
