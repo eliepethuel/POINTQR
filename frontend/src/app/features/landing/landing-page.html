@@ -1,0 +1,233 @@
+<header class="nav">
+  <a class="brand" href="/">Point<span>QR</span></a>
+  <nav aria-label="Sections">
+    <a href="#solution">Solution</a>
+    <a href="#fraude">Anti-fraude</a>
+    <a href="#modes">Modes</a>
+    <a href="#conformite">Conformité</a>
+  </nav>
+  <a class="pq-btn pq-btn-ghost" routerLink="/connexion">Se connecter</a>
+</header>
+
+<main>
+  <section class="hero pq-grain" aria-labelledby="hero-title">
+    <div class="pq-aurora" aria-hidden="true"></div>
+    <div class="hero-text">
+      <p class="eyebrow">Pointage par QR code dynamique · Zéro biométrie</p>
+      <h1 id="hero-title" class="title">
+        @for (word of titleWords; track $index) {
+          <span class="word"
+            ><span [style.animation-delay.ms]="120 + $index * 90">{{ word }}</span></span
+          >
+        }
+      </h1>
+      <p class="lead">
+        Remplacez la feuille d'émargement : l'heure est fixée par le serveur, jamais par l'agent. Un
+        QR renouvelé toutes les 30 secondes, vérifié avec le téléphone lié et la position du site.
+      </p>
+      <div class="ctas">
+        <a class="pq-btn pq-btn-highlight big" routerLink="/connexion" pqMagnetic>Voir la démo</a>
+        <a class="pq-btn big" href="#solution">Comment ça marche</a>
+      </div>
+      <p class="clock">
+        <span class="dot" aria-hidden="true"></span> Heure du serveur
+        <strong class="pq-mono">{{ clock() }}</strong>
+      </p>
+    </div>
+    <div class="hero-qr" aria-hidden="true">
+      <div class="qr-float" pqTilt3d [tiltMax]="14">
+        <pq-qr-canvas [value]="heroQr()" [pixelSize]="9" label="Exemple de QR dynamique" />
+        <span class="qr-ring"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="problem" pqRevealOnScroll>
+    <h2>Une feuille papier ne prouve rien</h2>
+    <div class="cards">
+      @for (
+        p of [
+          'Heures arrondies ou inventées',
+          'Signature pour un collègue absent',
+          'Feuilles perdues, illisibles',
+          'Retards calculés à la main',
+          'Personne ne sait qui est là à 9 h',
+          'Aucun lien avec la paie',
+        ];
+        track p;
+        let i = $index
+      ) {
+        <p class="pq-card problem-card" pqRevealOnScroll [revealIndex]="i">{{ p }}</p>
+      }
+    </div>
+  </section>
+
+  <section id="solution" class="steps">
+    <h2 pqRevealOnScroll>Le parcours en 4 étapes</h2>
+    <ol>
+      @for (s of steps; track s.n; let i = $index) {
+        <li class="pq-card step" pqSpotlight pqRevealOnScroll [revealIndex]="i">
+          <span class="n pq-mono">{{ s.n }}</span>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="rule" #timeline aria-labelledby="rule-title">
+    <h2 id="rule-title">Un retard se compte depuis l'heure prévue</h2>
+    <div class="track" aria-hidden="true">
+      <span class="track-fill"></span>
+      <span class="tolerance">Tolérance 10 min</span>
+    </div>
+    <div class="ticks">
+      <span class="tick" style="left: 0%">7:20</span>
+      <span class="tick strong" style="left: 25%">7:30<small>Arrivée prévue</small></span>
+      <span class="tick" style="left: 50%">7:40</span>
+      <span class="tick coral" style="left: 80%">7:52<small>Pointage</small></span>
+      <span class="tick" style="left: 100%">8:00</span>
+    </div>
+    <p class="verdict">Retard compté : <strong class="pq-mono">22 min</strong></p>
+  </section>
+
+  <section id="fraude" class="fraud">
+    <h2 pqRevealOnScroll>Chaque triche a sa parade</h2>
+    <p class="hint">Touchez une carte pour la retourner.</p>
+    <div class="flip-grid">
+      @for (f of frauds; track f.fraud; let i = $index) {
+        <button
+          type="button"
+          class="flip"
+          [class.flipped]="flipped().has(i)"
+          (click)="flip(i)"
+          pqRevealOnScroll
+          [revealIndex]="i"
+          [attr.aria-label]="'Fraude : ' + f.fraud + '. Parade : ' + f.parade"
+        >
+          <span class="face front"><small>Fraude</small>{{ f.fraud }}</span>
+          <span class="face back"><small>Parade</small>{{ f.parade }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section id="modes" class="modes">
+    <h2 pqRevealOnScroll>Personne n'est oublié, même sans smartphone</h2>
+    <div class="mode-grid">
+      @for (m of modes; track m.letter; let i = $index) {
+        <article class="pq-card mode" pqTilt3d pqRevealOnScroll [revealIndex]="i">
+          <span class="letter pq-mono">{{ m.letter }}</span>
+          <h3>{{ m.title }}</h3>
+          <p>{{ m.text }}</p>
+          <span class="pq-badge" [class.pq-badge-success]="m.trust === 'Confiance élevée'">{{
+            m.trust
+          }}</span>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="conformite" class="artci pq-glass" pqRevealOnScroll>
+    <div>
+      <h2>Zéro biométrie. Un argument de vente.</h2>
+      <p>
+        En juin 2024, l'ARTCI a jugé la biométrie disproportionnée pour le contrôle de présence.
+        PointQR n'enregistre ni empreinte ni visage.
+      </p>
+      <ul>
+        <li>Dossier type de déclaration ARTCI fourni à chaque client (loi n° 2013-450)</li>
+        <li>Position lue seulement au moment du pointage, jamais en continu</li>
+        <li>Hébergement possible en Côte d'Ivoire, isolation stricte de chaque entreprise</li>
+      </ul>
+    </div>
+    <p class="shield pq-mono" aria-hidden="true">0</p>
+  </section>
+
+  <section class="figures" aria-label="Objectifs chiffrés">
+    <article class="pq-card" pqSpotlight pqRevealOnScroll [revealIndex]="0">
+      <p class="v pq-mono" [pqCountUp]="5" countPrefix="< " countSuffix=" s"></p>
+      <p>pour pointer, de l'ouverture de l'app à la confirmation</p>
+    </article>
+    <article class="pq-card" pqSpotlight pqRevealOnScroll [revealIndex]="1">
+      <p class="v pq-mono" [pqCountUp]="30" countSuffix=" s"></p>
+      <p>durée de vie maximale d'un QR code</p>
+    </article>
+    <article class="pq-card" pqSpotlight pqRevealOnScroll [revealIndex]="2">
+      <p class="v pq-mono" [pqCountUp]="100" countSuffix=" %"></p>
+      <p>des heures fixées par le serveur</p>
+    </article>
+    <article class="pq-card" pqSpotlight pqRevealOnScroll [revealIndex]="3">
+      <p class="v pq-mono" [pqCountUp]="99.5" [countDecimals]="1" countSuffix=" %"></p>
+      <p>de disponibilité du pointage, de 6 h à 20 h</p>
+    </article>
+  </section>
+
+  <section class="architecture" #architecture aria-labelledby="arch-title">
+    <h2 id="arch-title">Une plateforme, trois applications</h2>
+    <svg
+      viewBox="0 0 900 340"
+      role="img"
+      aria-label="Back-office, application agent et borne reliés à l'API, elle-même reliée à PostgreSQL, Redis, au stockage et aux notifications"
+    >
+      <g class="wires" fill="none" stroke-width="2">
+        <path class="wire" d="M150 70 C 150 130, 450 110, 450 160" />
+        <path class="wire" d="M450 70 L 450 160" />
+        <path class="wire" d="M750 70 C 750 130, 450 110, 450 160" />
+        <path class="wire" d="M450 220 C 450 260, 120 250, 120 290" />
+        <path class="wire" d="M450 220 C 450 260, 340 250, 340 290" />
+        <path class="wire" d="M450 220 C 450 260, 560 250, 560 290" />
+        <path class="wire" d="M450 220 C 450 260, 780 250, 780 290" />
+      </g>
+      @for (
+        n of [
+          { x: 150, y: 50, t: 'Back-office web' },
+          { x: 450, y: 50, t: 'App agent (PWA)' },
+          { x: 750, y: 50, t: 'Borne' },
+        ];
+        track n.t
+      ) {
+        <g>
+          <rect
+            [attr.x]="n.x - 95"
+            [attr.y]="n.y - 22"
+            width="190"
+            height="44"
+            rx="14"
+            class="node"
+          />
+          <text [attr.x]="n.x" [attr.y]="n.y + 5" text-anchor="middle">{{ n.t }}</text>
+        </g>
+      }
+      <rect x="285" y="160" width="330" height="60" rx="16" class="node core" />
+      <text x="450" y="196" text-anchor="middle" class="core-text">API Django — cœur métier</text>
+      @for (
+        n of [
+          { x: 120, t: 'PostgreSQL · RLS' },
+          { x: 340, t: 'Redis · anti-rejeu' },
+          { x: 560, t: 'Stockage S3' },
+          { x: 780, t: 'Notifications' },
+        ];
+        track n.t
+      ) {
+        <g>
+          <rect [attr.x]="n.x - 95" y="290" width="190" height="40" rx="12" class="node" />
+          <text [attr.x]="n.x" y="315" text-anchor="middle">{{ n.t }}</text>
+        </g>
+      }
+    </svg>
+  </section>
+
+  <section class="cta pq-grain">
+    <div class="pq-aurora" aria-hidden="true"></div>
+    <h2>Le pointage qui ne ment pas.</h2>
+    <p>Une nouvelle entreprise est opérationnelle en moins d'une journée.</p>
+    <a class="pq-btn pq-btn-highlight big" routerLink="/connexion" pqMagnetic>Essayer la démo</a>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>PointQR · Abidjan</span>
+  <a href="/kiosk">Mode borne</a>
+  <a href="/agent">Application agent</a>
+</footer>
