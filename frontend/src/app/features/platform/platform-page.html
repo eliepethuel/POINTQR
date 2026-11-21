@@ -49,7 +49,7 @@
           <td class="pq-mono">{{ company.slug }}.pointqr.ci</td>
           <td>
             @if (company.current_subscription; as sub) {
-              {{ sub['plan'] }} · {{ sub['max_agents'] }} agents · jusqu'au
+              {{ plans[sub['plan']] ?? sub['plan'] }} · {{ sub['max_agents'] }} agents · jusqu'au
               {{ sub['end_date'] | date: 'dd/MM/yyyy' }}
             } @else {
               <span class="pq-badge pq-badge-danger">aucun</span>
@@ -207,8 +207,8 @@
           <dd class="pq-mono">{{ form.slug }}.pointqr.ci</dd>
           <dt>Formule</dt>
           <dd>
-            {{ form.plan }} · {{ form.max_agents }} agents · {{ form.max_sites }} sites ·
-            {{ form.max_kiosks }} bornes
+            {{ plans[form.plan] ?? form.plan }} · {{ form.max_agents }} agents ·
+            {{ form.max_sites }} sites · {{ form.max_kiosks }} bornes
           </dd>
           <dt>Administrateur</dt>
           <dd>{{ form.admin_username }}</dd>
