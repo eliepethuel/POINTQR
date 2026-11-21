@@ -45,6 +45,14 @@
       >
         <svg lucidePanelLeft [size]="18"></svg>
       </button>
+      <button
+        type="button"
+        class="pq-btn pq-btn-ghost search"
+        (click)="palette.toggle()"
+        aria-label="Ouvrir la palette de commandes"
+      >
+        Rechercher… <kbd>Ctrl K</kbd>
+      </button>
       <div class="spacer"></div>
       <button
         type="button"
@@ -82,3 +90,4 @@
   </div>
 </div>
 <pq-toaster />
+<pq-command-palette #palette [items]="flatItems()" />
