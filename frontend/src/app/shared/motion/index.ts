@@ -7,3 +7,4 @@ export * from './split-text';
 export * from './magnetic';
 export * from './spotlight';
 export * from './shimmer';
+export * from './tilt3d';
