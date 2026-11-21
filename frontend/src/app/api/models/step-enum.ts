@@ -5,5 +5,6 @@
  * * `authenticated` - authenticated
  * * `mfa_required` - mfa_required
  * * `mfa_setup` - mfa_setup
+ * * `activated` - activated
  */
-export type StepEnum = 'authenticated' | 'mfa_required' | 'mfa_setup';
+export type StepEnum = 'authenticated' | 'mfa_required' | 'mfa_setup' | 'activated';
