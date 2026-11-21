@@ -13,6 +13,20 @@ class LoginSerializer(serializers.Serializer[Any]):
     password = serializers.CharField(max_length=128, trim_whitespace=False)
 
 
+class ActivationSerializer(serializers.Serializer[Any]):
+    """First password of an invited agent (EF-09)."""
+
+    company_code = serializers.CharField(max_length=12)
+    token = serializers.CharField(max_length=128)
+    password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
+class ActivationInfoSerializer(serializers.Serializer[Any]):
+    first_name = serializers.CharField()
+    username = serializers.CharField()
+    company = serializers.CharField()
+
+
 class MfaVerifySerializer(serializers.Serializer[Any]):
     mfa_token = serializers.CharField()
     code = serializers.RegexField(r"^\s*\d{6}\s*$", error_messages={"invalid": "6 chiffres."})
@@ -65,7 +79,9 @@ class MeSerializer(serializers.ModelSerializer[User]):
 class AuthResponseSerializer(serializers.Serializer[Any]):
     """Either tokens (step=authenticated) or an MFA challenge."""
 
-    step = serializers.ChoiceField(choices=["authenticated", "mfa_required", "mfa_setup"])
+    step = serializers.ChoiceField(
+        choices=["authenticated", "mfa_required", "mfa_setup", "activated"]
+    )
     access = serializers.CharField(required=False)
     user = MeSerializer(required=False)
     mfa_token = serializers.CharField(required=False)

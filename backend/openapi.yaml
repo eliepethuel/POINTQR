@@ -214,6 +214,30 @@ paths:
                 items:
                   $ref: '#/components/schemas/Device'
           description: ''
+  /api/v1/agents/{id}/invite/:
+    post:
+      operationId: agents_invite
+      description: 'EF-09: creates the agent''s account if needed and a single-use
+        activation link.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Un(une) Chaîne UUID identifiant ce(cette) agent.
+        required: true
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
   /api/v1/agents/{id}/rotate-badge/:
     post:
       operationId: agents_rotate_badge
@@ -270,6 +294,22 @@ paths:
               schema:
                 type: string
                 format: binary
+          description: ''
+  /api/v1/agents/invite-all/:
+    post:
+      operationId: agents_invite_all
+      description: Invites every active agent who has neither an active account nor
+        a pending link.
+      tags:
+      - agents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteAll'
           description: ''
   /api/v1/audit-logs/:
     get:
@@ -336,6 +376,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditLog'
+          description: ''
+  /api/v1/auth/activation/:
+    get:
+      operationId: auth_activation_check
+      description: 'EF-09: an invited agent checks their link, then chooses a password
+        and is signed in.'
+      parameters:
+      - in: query
+        name: entreprise
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: jeton
+        schema:
+          type: string
+        required: true
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationInfo'
+          description: ''
+    post:
+      operationId: auth_activate
+      description: 'EF-09: an invited agent checks their link, then chooses a password
+        and is signed in.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
           description: ''
   /api/v1/auth/login/:
     post:
@@ -3200,6 +3288,12 @@ paths:
           description: ''
 components:
   schemas:
+    AccountEnum:
+      enum:
+      - none
+      - invited
+      - active
+      type: string
     ActivateRequestRequest:
       type: object
       properties:
@@ -3217,6 +3311,39 @@ components:
           maxLength: 60
       required:
       - device_id
+    ActivationInfo:
+      type: object
+      properties:
+        first_name:
+          type: string
+        username:
+          type: string
+        company:
+          type: string
+      required:
+      - company
+      - first_name
+      - username
+    ActivationRequest:
+      type: object
+      description: First password of an invited agent (EF-09).
+      properties:
+        company_code:
+          type: string
+          minLength: 1
+          maxLength: 12
+        token:
+          type: string
+          minLength: 1
+          maxLength: 128
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+      - company_code
+      - password
+      - token
     Agent:
       type: object
       properties:
@@ -3280,12 +3407,19 @@ components:
         has_device:
           type: boolean
           readOnly: true
+        account:
+          allOf:
+          - $ref: '#/components/schemas/AccountEnum'
+          description: 'none : pas encore invité · invited : lien envoyé · active
+            : compte activé'
+          readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
           title: Créé le
       required:
+      - account
       - created_at
       - employee_number
       - first_names
@@ -4408,6 +4542,40 @@ components:
           default: false
       required:
       - file
+    Invitation:
+      type: object
+      properties:
+        username:
+          type: string
+        link:
+          type: string
+          description: Lien d'activation, à afficher en QR si l'agent n'a pas d'e-mail
+        expires_at:
+          type: string
+          format: date-time
+        sent_to:
+          type: string
+      required:
+      - expires_at
+      - link
+      - sent_to
+      - username
+    InviteAll:
+      type: object
+      properties:
+        invited:
+          type: integer
+        emailed:
+          type: integer
+        without_email:
+          type: integer
+        skipped:
+          type: integer
+      required:
+      - emailed
+      - invited
+      - skipped
+      - without_email
     Kiosk:
       type: object
       properties:
@@ -6514,11 +6682,13 @@ components:
       - authenticated
       - mfa_required
       - mfa_setup
+      - activated
       type: string
       description: |-
         * `authenticated` - authenticated
         * `mfa_required` - mfa_required
         * `mfa_setup` - mfa_setup
+        * `activated` - activated
     Subscription:
       type: object
       properties:

@@ -21,6 +21,8 @@ x-app: &app
     MIGRATION_DATABASE_URL: postgres://${POSTGRES_OWNER_USER:-pointqr_owner}:${POSTGRES_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-pointqr}
     REDIS_URL: redis://redis:6379/0
     EMAIL_URL: smtp://mailpit:1025
+    # Address put in the activation links e-mailed to agents (EF-09).
+    FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
     NUM_PROXIES: "1"
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
   volumes:
