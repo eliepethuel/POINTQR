@@ -57,7 +57,7 @@ def _dataset(company: Company, count: int) -> dict[str, Any]:
     schedule = Schedule.objects.first() or Schedule.objects.create(
         name="Journée", start_time=clock(7, 30), end_time=clock(16, 30)
     )
-    staff = {
+    staff: dict[str, list[str]] = {
         "admin": [Role.COMPANY_ADMIN],
         "rh": [Role.HR],
         "manager": [Role.MANAGER],
