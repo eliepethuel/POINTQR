@@ -21,14 +21,23 @@ x-app: &app
     MIGRATION_DATABASE_URL: postgres://${POSTGRES_OWNER_USER:-pointqr_owner}:${POSTGRES_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-pointqr}
     REDIS_URL: redis://redis:6379/0
     EMAIL_URL: smtp://mailpit:1025
+    # Address put in the activation links e-mailed to agents (EF-09).
+    FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
     NUM_PROXIES: "1"
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    # Files (reports, attachments) on the S3 service below (ADR-0009); remove to use the volume.
+    S3_ENDPOINT_URL: http://storage:8333
+    S3_BUCKET: ${S3_BUCKET:-pointqr}
+    S3_ACCESS_KEY: ${S3_ACCESS_KEY:?run tasks.ps1 env first}
+    S3_SECRET_KEY: ${S3_SECRET_KEY:?run tasks.ps1 env first}
   volumes:
     - media:/app/media
   depends_on: &app-deps
     postgres:
       condition: service_healthy
     redis:
+      condition: service_healthy
+    storage:
       condition: service_healthy
 
 services:
@@ -61,6 +70,25 @@ services:
       interval: 5s
       retries: 20
 
+  # S3-compatible object storage (ADR-0009, PQR-012); the bucket is created by `migrate`.
+  storage:
+    image: chrislusf/seaweedfs:4.54
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        printf '{"identities":[{"name":"pointqr","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}'
+        "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" > /tmp/s3.json &&
+        exec weed server -dir=/data -s3 -s3.port=8333 -s3.config=/tmp/s3.json -master.volumeSizeLimitMB=1024
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?run tasks.ps1 env first}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?run tasks.ps1 env first}
+    volumes: [s3data:/data]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9333/cluster/status || exit 1"]
+      interval: 5s
+      retries: 30
+
   # Catches every e-mail sent by the platform: http://localhost:8025
   mailpit:
     image: axllent/mailpit:v1.27
@@ -70,7 +98,7 @@ services:
   migrate:
     <<: *app
     restart: "no"
-    command: ["sh", "-c", "DATABASE_URL=$$MIGRATION_DATABASE_URL python manage.py migrate --noinput"]
+    command: ["sh", "-c", "DATABASE_URL=$$MIGRATION_DATABASE_URL python manage.py migrate --noinput && python manage.py ensure_storage"]
 
   backend:
     <<: *app
@@ -117,6 +145,7 @@ services:
     command: ["sh", "-c", "DATABASE_URL=$$MIGRATION_DATABASE_URL python manage.py seed_demo"]
 
 volumes:
+  s3data:
   pgdata:
   redisdata:
   media:

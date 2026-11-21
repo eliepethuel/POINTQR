@@ -18,6 +18,13 @@ import { ToastService } from '../../shared/ui/toast';
 
 const STEPS = ['Entreprise', 'Abonnement', 'Administrateur', 'Récapitulatif'] as const;
 
+/** Names of the plans (the API gives their codes). */
+const PLANS: Record<string, string> = {
+  starter: 'Essentiel',
+  business: 'Entreprise',
+  enterprise: 'Grand compte',
+};
+
 /** Editor console: companies, subscriptions and the 4-step onboarding wizard (EF-01 to EF-04). */
 @Component({
   selector: 'pq-platform-page',
@@ -27,6 +34,7 @@ const STEPS = ['Entreprise', 'Abonnement', 'Administrateur', 'Récapitulatif'] a
   styleUrl: './platform-page.css',
 })
 export class PlatformPage {
+  protected readonly plans = PLANS;
   private readonly api = inject(Api);
   private readonly toast = inject(ToastService);
   protected readonly steps = STEPS;

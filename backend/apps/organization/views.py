@@ -23,6 +23,8 @@ from .serializers import (
     DeviceSerializer,
     ImportReportSerializer,
     ImportRequestSerializer,
+    InvitationSerializer,
+    InviteAllSerializer,
     OrgTreeNodeSerializer,
     OrgUnitSerializer,
     SiteSerializer,
@@ -228,6 +230,34 @@ class AgentViewSet(AuditedModelViewSet):
             self.get_object(), actor=request.user, request=request._request
         )
         return Response(AgentSerializer(agent).data)
+
+    @extend_schema(operation_id="agents_invite", request=None, responses=InvitationSerializer)
+    @action(detail=True, methods=["post"])
+    def invite(self, request: Request, pk: Any = None) -> Response:
+        """EF-09: creates the agent's account if needed and a single-use activation link."""
+        from apps.accounts.invitations import invite
+
+        invitation = invite(self.get_object(), actor=request.user, request=request._request)
+        return Response(
+            InvitationSerializer(
+                {
+                    "username": invitation.username,
+                    "link": invitation.link,
+                    "expires_at": invitation.expires_at,
+                    "sent_to": invitation.sent_to,
+                }
+            ).data
+        )
+
+    @extend_schema(operation_id="agents_invite_all", request=None, responses=InviteAllSerializer)
+    @action(detail=False, methods=["post"], url_path="invite-all")
+    def invite_all(self, request: Request) -> Response:
+        """Invites every active agent who has neither an active account nor a pending link."""
+        from apps.accounts.invitations import invite_all
+
+        return Response(
+            InviteAllSerializer(invite_all(actor=request.user, request=request._request)).data
+        )
 
 
 class DeviceViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet[Device]):

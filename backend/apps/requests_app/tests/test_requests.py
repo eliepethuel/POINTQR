@@ -281,3 +281,60 @@ def test_audit_log_is_read_only_and_restricted(scene, admin_x, hr_x, make_client
 
 def test_schedule_time_used_in_lateness(scene):
     assert scene.agent.schedule.start_time == time(7, 30)
+
+
+def test_correction_request_in_the_future_is_refused(team):
+    scene, _ = team
+    with time_machine.travel(at(9, 0), tick=False):
+        res = scene.agent_client.post(
+            "/api/v1/requests/",
+            {
+                "kind": "correction",
+                "category": "missing_checkin",
+                "target_date": "2026-11-16",
+                "requested_direction": "out",
+                "requested_time": at(16, 35).isoformat(),
+                "reason": "Je partirai à 16 h 35",
+            },
+            format="json",
+        )
+    assert res.status_code == 400
+    assert res.json()["code"] == "future"
+
+
+def test_failed_correction_leaves_the_request_pending(team, monkeypatch):
+    """Approval and correction are one unit: no « approved » request without its check-in."""
+    from apps.attendance import corrections
+    from apps.requests_app.models import Request, RequestDecision
+    from common.exceptions import DomainError
+
+    scene, _ = team
+    scene.company.approval_levels = 1
+    scene.company.save()
+    with time_machine.travel(at(8, 0, day=17), tick=False):
+        req = scene.agent_client.post(
+            "/api/v1/requests/",
+            {
+                "kind": "correction",
+                "category": "missing_checkin",
+                "target_date": "2026-11-16",
+                "requested_direction": "out",
+                "requested_time": at(16, 35).isoformat(),
+                "reason": "Oubli de pointer ma sortie",
+            },
+            format="json",
+        ).json()
+
+        def broken(**_kwargs):
+            raise DomainError("Correction impossible.", code="boom", status_code=400)
+
+        monkeypatch.setattr(corrections, "correct", broken)
+        res = scene.other_client.post(
+            f"/api/v1/requests/{req['id']}/decide/", {"approve": True}, format="json"
+        )
+    assert res.status_code == 400
+    with tenant_context(scene.company.id):
+        kept = Request.objects.get(id=req["id"])
+        assert kept.status == Request.Status.PENDING_MANAGER
+        assert kept.resulting_checkin_id is None
+        assert not RequestDecision.objects.filter(request=kept).exists()

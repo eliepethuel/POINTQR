@@ -126,6 +126,10 @@ function monthRange(): { start: string; end: string } {
             }
           }
         </article>
+      } @empty {
+        <p class="muted">
+          Aucun rapport pour l'instant : choisissez un type et une période, puis « Générer ».
+        </p>
       }
     </section>
 

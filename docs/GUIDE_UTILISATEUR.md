@@ -125,8 +125,16 @@ Deux façons d'ajouter des agents :
      corrigez le fichier et déposez-le à nouveau.
   4. Sinon, cliquez sur **Confirmer l'import de N agents**.
 
-La fiche d'un agent indique son téléphone lié (« actif », « révoqué » ou « à activer »). La
-**Fiche complète** montre le mois de l'agent :
+La colonne **Accès** de la liste indique où en est chaque agent :
+
+| Badge | Signification |
+|---|---|
+| à inviter | l'agent n'a pas encore d'accès à l'application |
+| invité | le lien d'activation est envoyé, l'agent n'a pas encore choisi son mot de passe |
+| à lier | compte activé, le téléphone sera lié à la première connexion |
+| lié | compte activé et téléphone lié : l'agent peut pointer |
+
+La **Fiche complète** montre le mois de l'agent :
 
 - jours présents ;
 - retards et minutes cumulées ;
@@ -134,10 +142,29 @@ La fiche d'un agent indique son téléphone lié (« actif », « révoqué » o
 - heures travaillées ;
 - le détail jour par jour.
 
-### 3.6 Utilisateurs (`Utilisateurs`)
+### 3.6 Inviter les agents
 
-Créez les comptes du back-office (RH, managers, auditeurs) et les comptes des agents. Un compte
-agent est relié à une fiche agent.
+Chaque agent reçoit son accès par une invitation : il n'y a aucun compte à créer à la main.
+
+- **Tous d'un coup** : sur `Agents`, cliquez sur **Inviter les agents**. Chaque agent actif sans
+  accès reçoit son invitation ; ceux qui ont déjà un accès ou un lien en cours sont ignorés.
+- **Un par un** : ouvrez l'agent dans la liste, puis **Inviter l'agent** (ou **Renvoyer
+  l'invitation** si le premier lien est perdu ; l'ancien lien cesse alors de fonctionner).
+
+L'identifiant de l'agent est son **matricule** en minuscules (par exemple `mx0042`).
+
+- Si sa fiche a une **adresse e-mail**, il reçoit un message avec son lien personnel.
+- Sinon, le panneau de l'agent affiche le lien et **son QR code** : l'agent le scanne avec son
+  téléphone, sur place. Le bouton **Copier le lien** permet aussi de l'envoyer par un autre
+  moyen.
+
+Le lien est **personnel, à usage unique et valable 7 jours**. L'invitation est inscrite au journal
+d'audit.
+
+### 3.7 Utilisateurs (`Utilisateurs`)
+
+Créez les comptes du back-office : RH, managers, auditeurs. Un compte peut cumuler plusieurs
+rôles ; un manager qui pointe aussi garde le rôle « Agent ».
 
 ## 4. Installer une borne
 
@@ -164,12 +191,18 @@ Pour la gestion courante, depuis `Bornes` :
 
 ## 5. Agent : pointer avec son téléphone
 
-### Première fois : activer son téléphone
+### Première fois : activer son accès puis son téléphone
 
-1. Ouvrez `/agent` sur votre téléphone et connectez-vous. Vous pouvez ajouter l'application à
-   l'écran d'accueil.
-2. Appuyez sur **Activer ce téléphone**. Un seul téléphone peut pointer pour vous : après
-   activation, tout changement devra être validé par le service RH (voir §9).
+1. Ouvrez sur votre téléphone le lien reçu par e-mail, ou scannez le QR présenté par le service
+   RH.
+2. La page **Bonjour …** affiche votre identifiant. Choisissez votre mot de passe (10 caractères
+   au moins, pas uniquement des chiffres), confirmez-le, puis appuyez sur **Activer mon accès**.
+3. Vous arrivez dans l'application. Appuyez sur **Activer ce téléphone** : un seul téléphone peut
+   pointer pour vous, et tout changement devra ensuite être validé par le service RH (voir §9).
+   Vous pouvez ajouter l'application à l'écran d'accueil.
+
+Les fois suivantes, connectez-vous sur `/connexion` avec le code entreprise, votre identifiant et
+votre mot de passe.
 
 ### Chaque jour : pointer
 
@@ -260,9 +293,18 @@ au journal d'audit. Une demande refusée ne change rien.
 
 ## 9. Changement de téléphone
 
-Quand un agent se connecte depuis un nouveau téléphone, l'application le prévient et une demande
-part au service RH. Le RH ouvre `Téléphones`, puis clique sur **Valider** (« Nouveau téléphone
-lié ») ou **Refuser**. L'ancien téléphone ne peut plus pointer.
+Quand un agent se connecte depuis un nouveau téléphone, l'application affiche **« Un autre
+téléphone est lié à votre compte »** :
+
+1. L'agent appuie sur **Demander le changement**. L'écran devient **« Changement de téléphone
+   demandé »** ; en attendant, l'agent pointe avec son ancien téléphone ou son badge.
+2. Le RH ouvre `Téléphones`, puis clique sur **Valider** (« Nouveau téléphone lié ») ou
+   **Refuser**.
+3. Après validation, l'agent appuie sur **Vérifier** : il peut pointer avec le nouveau téléphone.
+   L'ancien ne peut plus pointer.
+
+Une seule demande reste en attente par agent : si l'agent essaie ensuite un troisième téléphone,
+c'est ce dernier qui est proposé au RH.
 
 ## 10. Rapports et clôture du mois
 
@@ -402,7 +444,12 @@ Parcours en 5 minutes :
 1. Connectez-vous en `rh` (MINX) et regardez le **tableau de bord**.
 2. Ouvrez `Bornes` → **Nouvelle borne** → **Générer le code**, et saisissez-le sur `/kiosk` dans
    un autre onglet ou sur une tablette.
-3. Sur un téléphone (ou un second navigateur), ouvrez `/agent`, connectez-vous en `agent` (MINX),
-   **activez le téléphone** et **scannez** le QR de la borne.
+3. Ouvrez `Agents`, choisissez un agent marqué **à inviter**, puis **Inviter l'agent**. Scannez
+   le QR affiché avec un téléphone (ou ouvrez le lien dans un second navigateur), choisissez un
+   mot de passe, **activez le téléphone** et **scannez** le QR de la borne.
 4. Le pointage apparaît aussitôt dans le **flux en direct** du tableau de bord.
-5. En `agent`, envoyez une **demande** de justification, puis validez-la en `manager` et en `rh`.
+5. Ouvrez `Demandes` : trois demandes de démonstration attendent une décision. L'une est « chez
+   le manager » : validez-la en `manager`, puis en `rh` (circuit à deux niveaux).
+
+Le compte `agent` de la démonstration a déjà un téléphone lié (dans les données générées) :
+depuis un nouveau navigateur, il montre le parcours de **changement de téléphone** (§9).

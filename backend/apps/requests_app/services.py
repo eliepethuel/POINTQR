@@ -3,6 +3,9 @@
 from datetime import datetime
 from typing import Any
 
+from django.db import transaction
+from django.utils import timezone
+
 from apps.accounts.models import Role, User
 from apps.attendance import corrections, events, workdays
 from apps.attendance.models import CheckIn
@@ -60,6 +63,12 @@ def create(
     _validate_attachment(attachment)
     if kind == Request.Kind.CORRECTION and requested_time is None:
         raise DomainError("Indiquez l'heure à retenir.", code="time_required", status_code=400)
+    if requested_time is not None and requested_time > timezone.now():
+        raise DomainError(
+            "L'heure demandée est dans le futur : une correction porte sur un pointage passé.",
+            code="future",
+            status_code=400,
+        )
     if target_checkin is not None and target_checkin.agent_id != agent.id:
         raise DomainError("Pointage introuvable.", code="not_found", status_code=404)
     status = Request.Status.PENDING_MANAGER if _has_manager(agent) else Request.Status.PENDING_HR
@@ -128,6 +137,23 @@ def decide(
             "Vous ne pouvez pas valider cette demande.", code="not_approver", status_code=403
         )
     workdays.ensure_open(req.target_date)
+    # All or nothing: business errors (4xx) are committed by TenantMiddleware (refused check-ins
+    # must stay on record), so a failed correction must not leave an "approved" request behind.
+    with transaction.atomic():
+        return _decide(
+            req, user=user, approve=approve, comment=comment, company=company, request=request
+        )
+
+
+def _decide(
+    req: Request,
+    *,
+    user: User,
+    approve: bool,
+    comment: str,
+    company: Company,
+    request: Any,
+) -> Request:
     level = (
         RequestDecision.Level.MANAGER
         if req.status == Request.Status.PENDING_MANAGER

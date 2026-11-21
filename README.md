@@ -32,6 +32,8 @@ entreprises de Côte d'Ivoire, sans aucune donnée biométrique.
 - **Sécurité** : JWT court + refresh en cookie HttpOnly, TOTP obligatoire pour admin/RH/éditeur,
   verrouillage après 5 échecs, journal d'audit en ajout seul, erreurs RFC 7807.
 
+> Pas à pas détaillé (Docker ou natif, téléphone, dépannage) : **[docs/DEMARRAGE.md](docs/DEMARRAGE.md)**.
+
 ## Prérequis
 
 - [uv](https://docs.astral.sh/uv/) (installe Python 3.13 automatiquement)
@@ -82,8 +84,8 @@ Linux / macOS : mêmes cibles avec `make` (`make env db-init install migrate see
 | http://localhost:8080 | application (site vitrine, back-office, borne, agent) et API sous `/api/` |
 | http://localhost:8025 | e-mails envoyés (Mailpit) |
 
-Services : PostgreSQL 16, Redis 7, migrations, API (uvicorn), worker et beat Celery, nginx,
-Mailpit. Détails et choix de sécurité : [ADR-0014](docs/adr/0014-containerised-stack.md).
+Services : PostgreSQL 16, Redis 7, stockage S3 (SeaweedFS), migrations, API (uvicorn), worker
+et beat Celery, nginx, Mailpit. Détails et choix de sécurité : [ADR-0014](docs/adr/0014-containerised-stack.md).
 Arrêt : `.	asks.ps1 docker-down` (les volumes de données sont conservés).
 
 ## Comptes de démonstration
@@ -102,9 +104,11 @@ secret `PQRDEMOPQRDEMOPQRDEMOPQRDEMOPQRD` à une application d'authentification.
 | PME Y (`PMEY`) | `admin`, `agent` | administrateur, agent |
 | — | `editeur` | équipe PointQR (super-admin) |
 
-Parcours conseillé (détaillé dans le [guide d'utilisation](docs/GUIDE_UTILISATEUR.md#16-essayer-avec-les-données-de-démonstration)) : connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code
-d'appairage et saisissez-le sur `/kiosk` ; connectez-vous en `agent` sur `/agent` dans un autre
-navigateur ou un téléphone, liez le téléphone et scannez le QR de la borne. Le pointage apparaît
+Parcours conseillé (détaillé dans le
+[guide d'utilisation](docs/GUIDE_UTILISATEUR.md#16-essayer-avec-les-données-de-démonstration)) :
+connectez-vous en `rh` (MINX), ouvrez **Bornes**, générez un code d'appairage et saisissez-le sur
+`/kiosk` ; dans **Agents**, invitez un agent et scannez son QR d'activation avec un téléphone,
+choisissez un mot de passe, liez le téléphone et scannez le QR de la borne. Le pointage apparaît
 aussitôt sur le tableau de bord.
 
 ## Commandes utiles
@@ -112,6 +116,7 @@ aussitôt sur le tableau de bord.
 | Commande | Rôle |
 |---|---|
 | `test`, `test-back`, `test-front` | tests (pytest + couverture, Vitest) |
+| `e2e` | tests de bout en bout dans le navigateur (Playwright), sur la pile lancée |
 | `lint`, `format` | ruff, mypy, ESLint, Prettier |
 | `openapi` | exporte `backend/openapi.yaml`, le contrat d'API |
 | `client` | régénère le client Angular typé (`frontend/src/app/api/`, jamais modifié à la main) |
@@ -128,6 +133,7 @@ aussitôt sur le tableau de bord.
 | R8 — aucune route ne renvoie un objet d'une autre entreprise | `backend/tests/test_r8_isolation.py` (toutes les routes) |
 | R9 — rapport mensuel de 500 agents en moins de 30 s | `backend/apps/reports/tests/test_reports.py` |
 | R10 — 2 000 pointages/min, p95 < 500 ms | `infra/locust/locustfile.py`, résultats dans [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
+| R1, R2, R3, R7 dans le navigateur, invitation (EF-09), chaque page de chaque rôle | `frontend/e2e/` (Playwright), exécutés en CI contre la pile Docker |
 
 ## Sécurité multi-entreprises
 
@@ -138,6 +144,7 @@ transaction (ADR-0012).
 
 ## Documentation
 
+- **[Lancer le projet](docs/DEMARRAGE.md)** : Docker ou natif, pas à pas, et problèmes fréquents
 - **[Guide d'utilisation](docs/GUIDE_UTILISATEUR.md)** : chaque écran, par rôle, et les motifs de refus
 - [Plan de réalisation](docs/PLAN.md)
 - [Décisions d'architecture](docs/adr/)

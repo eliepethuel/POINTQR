@@ -145,24 +145,49 @@ export class RequestsPage {
     }
   }
 
+  /** Request being decided (its buttons are disabled meanwhile). */
+  protected readonly deciding = signal<string | null>(null);
+
   protected async decide(req: Request, approve: boolean): Promise<void> {
+    if (this.deciding()) return;
+    this.deciding.set(req.id);
     try {
-      await this.api.invoke(requestsDecide, {
+      const fresh = await this.api.invoke(requestsDecide, {
         id: req.id,
         body: { approve, comment: this.comment },
       });
       this.comment = '';
       this.toast.success(approve ? 'Demande validée.' : 'Demande refusée.');
-      this.list.reload();
+      this.replace(fresh);
     } catch (err) {
       this.toast.error(problemMessage(err));
+    } finally {
+      this.deciding.set(null);
     }
+  }
+
+  /**
+   * Shows the server's answer at once, then refreshes the list. A load already running (filter
+   * changed meanwhile) may have read the request half-way through the decision, and
+   * ``reload()`` is ignored while a load runs: without this the card could stay stale.
+   */
+  private replace(fresh: Request): void {
+    this.list.update((page) =>
+      page ? { ...page, results: page.results.map((r) => (r.id === fresh.id ? fresh : r)) } : page,
+    );
+    const refresh = () => {
+      if (this.list.isLoading()) setTimeout(refresh, 200);
+      else {
+        // The fresh copy stays shown until the refreshed list arrives.
+        this.list.reload();
+      }
+    };
+    setTimeout(refresh, 0);
   }
 
   protected async cancel(req: Request): Promise<void> {
     try {
-      await this.api.invoke(requestsCancel, { id: req.id });
-      this.list.reload();
+      this.replace(await this.api.invoke(requestsCancel, { id: req.id }));
     } catch (err) {
       this.toast.error(problemMessage(err));
     }

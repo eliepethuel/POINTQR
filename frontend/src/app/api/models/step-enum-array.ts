@@ -6,4 +6,4 @@ import { StepEnum } from './step-enum';
 /**
  * Each possible value of `StepEnum`
  */
-export const STEP_ENUM: StepEnum[] = ['authenticated', 'mfa_required', 'mfa_setup'];
+export const STEP_ENUM: StepEnum[] = ['authenticated', 'mfa_required', 'mfa_setup', 'activated'];

@@ -110,6 +110,11 @@ class MobileStatusSerializer(serializers.Serializer[Any]):
     agent_name = serializers.CharField()
     employee_number = serializers.CharField()
     device_bound = serializers.BooleanField()
+    phone_state = serializers.ChoiceField(
+        choices=["unbound", "this", "other", "change_pending"],
+        help_text="unbound : à activer · this : ce téléphone · other : un autre téléphone est lié "
+        "· change_pending : changement demandé, en attente du RH",
+    )
     next_direction = serializers.CharField()
     site_name = serializers.CharField(allow_null=True)
     schedule = serializers.CharField(allow_null=True)

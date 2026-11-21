@@ -3,9 +3,11 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  afterNextRender,
   effect,
   inject,
   input,
+  signal,
   viewChild,
 } from '@angular/core';
 import QRCode from 'qrcode';
@@ -22,21 +24,31 @@ const DISSOLVE_MS = 650;
 /**
  * Draws a QR code on a canvas. When the value changes, modules flip one by one at random
  * moments: the new code "dissolves" in over the previous one (pixel morphing).
+ *
+ * The canvas is sized to its slot so that every module is a whole number of device pixels:
+ * scaling a fixed bitmap by CSS gave modules of uneven width, which camera decoders (ZXing)
+ * failed to read from a tablet screen.
  */
 @Component({
   selector: 'pq-qr-canvas',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<canvas #canvas [attr.aria-label]="label()" role="img"></canvas>`,
   styles: `
+    /* The rounded white frame is the host: the canvas stays square, so the corners of the
+       quiet zone are never clipped (rounded canvas corners defeated camera decoders). */
     :host {
-      display: block;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      padding: 10px;
+      border-radius: 18px;
+      background: #fff;
     }
     canvas {
       display: block;
-      width: 100%;
+      max-width: 100%;
       height: auto;
       image-rendering: pixelated;
-      border-radius: 18px;
       background: #fff;
     }
   `,
@@ -49,16 +61,47 @@ export class QrCanvas {
 
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly motion = inject(MotionService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** Width of the slot in CSS pixels (0 until measured: the pixelSize input is used). */
+  private readonly slot = signal(0);
   private previous: Matrix | null = null;
   private frame = 0;
+  private settle: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     effect(() => this.draw(this.value()));
-    inject(DestroyRef).onDestroy(() => cancelAnimationFrame(this.frame));
+    effect(() => {
+      // A new slot size repaints the current code at the new module size, without animation.
+      if (this.slot() && this.previous) this.paint(this.previous, null, 1, null);
+    });
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => {
+      cancelAnimationFrame(this.frame);
+      clearTimeout(this.settle);
+    });
+    afterNextRender(() => {
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(([entry]) =>
+        this.slot.set(Math.floor(entry?.contentRect.width ?? 0)),
+      );
+      observer.observe(this.host.nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
+
+  /** Device pixels per module: as large as the slot allows, never fractional. */
+  private modulePixels(modules: number): { px: number; dpr: number } {
+    const dpr = window.devicePixelRatio || 1;
+    const width = this.slot();
+    if (!width) return { px: this.pixelSize(), dpr: 0 };
+    return { px: Math.max(1, Math.floor((width * dpr) / modules)), dpr };
   }
 
   private draw(text: string): void {
-    const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
+    // Level L: a code shown on a screen is never damaged, and the lower density matters. At
+    // level M our ~110-character tokens need a version 7 QR that ZXing failed to read for
+    // whole 30 s windows; level L gives versions 5-6 with larger modules, all read.
+    const qr = QRCode.create(text, { errorCorrectionLevel: 'L' });
     const next: Matrix = { size: qr.modules.size, data: qr.modules.data };
     const old = this.previous && this.previous.size === next.size ? this.previous : null;
     this.previous = next;
@@ -76,6 +119,13 @@ export class QrCanvas {
       if (progress < 1) this.frame = requestAnimationFrame(step);
     };
     this.frame = requestAnimationFrame(step);
+    // Animation frames pause when the page is hidden or throttled: the code must never stay
+    // frozen half-way between two QR codes (unreadable), so the final state is guaranteed.
+    clearTimeout(this.settle);
+    this.settle = setTimeout(() => {
+      cancelAnimationFrame(this.frame);
+      if (this.previous === next) this.paint(next, null, 1, null);
+    }, DISSOLVE_MS + 50);
   }
 
   private paint(
@@ -86,12 +136,14 @@ export class QrCanvas {
   ): void {
     const canvas = this.canvas().nativeElement;
     const quiet = 4;
-    const px = this.pixelSize();
+    const { px, dpr } = this.modulePixels(next.size + quiet * 2);
     const side = (next.size + quiet * 2) * px;
     if (canvas.width !== side) {
       canvas.width = side;
       canvas.height = side;
     }
+    // Displayed at exactly side / dpr CSS pixels, so one module = px device pixels.
+    canvas.style.width = dpr ? `${side / dpr}px` : '';
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.fillStyle = '#ffffff';

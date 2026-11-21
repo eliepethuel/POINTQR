@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Api } from '../../api/api';
+import { authActivate } from '../../api/fn/auth/auth-activate';
 import { authLogin } from '../../api/fn/auth/auth-login';
 import { authLogout } from '../../api/fn/auth/auth-logout';
 import { authMfaVerify } from '../../api/fn/auth/auth-mfa-verify';
@@ -65,6 +66,25 @@ export class Session {
       /* storage unavailable: the code is simply not remembered */
     }
     return this.handle(res);
+  }
+
+  /**
+   * First password of an invited agent (EF-09). Returns false when the account needs the
+   * usual sign-in (privileged roles, second factor).
+   */
+  async activate(companyCode: string, token: string, password: string): Promise<boolean> {
+    const code = companyCode.trim().toUpperCase();
+    const res = await this.api.invoke(authActivate, {
+      body: { company_code: code, token, password },
+    });
+    try {
+      localStorage.setItem(COMPANY_CODE_KEY, code);
+    } catch {
+      /* storage unavailable: the code is simply not remembered */
+    }
+    if (res.step !== 'authenticated') return false;
+    this.handle(res);
+    return true;
   }
 
   async verifyMfa(mfaToken: string, code: string): Promise<void> {
