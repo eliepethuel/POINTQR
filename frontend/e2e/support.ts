@@ -10,6 +10,7 @@ export interface E2EData {
   password: string;
   totp_secret: string;
   hr: string;
+  staff: { admin: string; hr: string; manager: string; auditor: string };
   agents: { username: string; name: string }[];
   pairing_code: string;
   site: { id: string; latitude: number; longitude: number };
@@ -148,7 +149,8 @@ export async function signIn(page: Page, d: E2EData, username: string): Promise<
   await page.getByRole('button', { name: 'Se connecter' }).click();
 }
 
-let lastTotpWindow = -1;
+/** Last 30 s window used per account: a code is accepted only once. */
+const usedWindow = new Map<string, number>();
 
 /** HR / admin sign-in, second factor included (waits for a fresh code if needed). */
 export async function signInWithTotp(page: Page, d: E2EData, username: string): Promise<void> {
@@ -158,8 +160,8 @@ export async function signInWithTotp(page: Page, d: E2EData, username: string): 
   // Never send a code too close to the end of its window, nor the code of a previous sign-in.
   const window = Math.floor(Date.now() / 30_000);
   const left = 30 - (Math.floor(Date.now() / 1000) % 30);
-  if (left < 5 || window === lastTotpWindow) await page.waitForTimeout(left * 1000 + 500);
-  lastTotpWindow = Math.floor(Date.now() / 30_000);
+  if (left < 5 || window === usedWindow.get(username)) await page.waitForTimeout(left * 1000 + 500);
+  usedWindow.set(username, Math.floor(Date.now() / 30_000));
   await step.getByRole('textbox').first().click();
   await page.keyboard.type(totp(d.totp_secret));
 }
