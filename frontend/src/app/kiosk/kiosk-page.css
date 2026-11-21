@@ -1,6 +1,7 @@
+/* A kiosk never scrolls: exactly one screen, the QR always fully visible. */
 .kiosk {
   position: relative;
-  min-height: 100svh;
+  height: 100svh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -59,7 +60,9 @@
   position: relative;
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(260px, min(62vh, 560px)) minmax(240px, 1fr);
+  min-height: 0;
+  /* QR column: what the height leaves once the header and the countdown label are placed. */
+  grid-template-columns: minmax(220px, min(calc(100svh - 330px), 560px)) minmax(240px, 1fr);
   align-items: center;
   gap: clamp(24px, 5vw, 72px);
   margin-top: 24px;
@@ -193,7 +196,7 @@
     grid-template-columns: 1fr;
   }
   .qr-wrap {
-    width: min(86vw, 520px);
+    width: min(86vw, 520px, calc(100svh - 460px));
     margin: 0 auto;
   }
 }
