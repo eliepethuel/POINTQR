@@ -113,6 +113,7 @@ export type { PeriodRequest } from './models/period-request';
 export type { PeriodStatusEnum } from './models/period-status-enum';
 export type { PersonalKey } from './models/personal-key';
 export type { PhoneCheckInRequestRequest } from './models/phone-check-in-request-request';
+export type { PhoneStateEnum } from './models/phone-state-enum';
 export type { PlanEnum } from './models/plan-enum';
 export type { PlatformStats } from './models/platform-stats';
 export type { PrintedToken } from './models/printed-token';

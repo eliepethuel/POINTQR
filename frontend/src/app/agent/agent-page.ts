@@ -47,12 +47,11 @@ export class AgentPage {
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<CheckInOutcome | null>(null);
   protected readonly locating = signal(false);
-  protected readonly activationPending = signal(false);
-
   protected readonly status = resource({
     loader: () => this.api.invoke(mobileStatus, { device_id: this.device }),
   });
   protected readonly bound = computed(() => this.status.value()?.device_bound ?? false);
+  protected readonly phoneState = computed(() => this.status.value()?.phone_state ?? 'unbound');
   protected readonly firstName = computed(
     () => this.status.value()?.agent_name.split(' ')[0] ?? '',
   );
@@ -72,8 +71,9 @@ export class AgentPage {
       await this.api.invoke(mobileActivate, { body: { device_id: this.device, ...deviceLabel() } });
       this.status.reload();
     } catch (err) {
-      if (problemCode(err) === 'device_change_pending') this.activationPending.set(true);
-      this.error.set(problemMessage(err));
+      // Another phone is linked: the change request now waits for HR, the screen says so.
+      if (problemCode(err) === 'device_change_pending') this.status.reload();
+      else this.error.set(problemMessage(err));
     } finally {
       this.busy.set(false);
     }

@@ -13,7 +13,7 @@ from apps.accounts.models import Role
 from apps.accounts.permissions import IsManagerOrAbove, role_permission
 from apps.kiosks.views import outcome_payload
 from apps.organization import selectors as org_selectors
-from apps.organization.models import Agent, Device
+from apps.organization.models import Agent, Device, DeviceChangeRequest
 from apps.organization.services import bind_device
 from common.crypto import b64url, decrypt
 from common.exceptions import DomainError
@@ -117,15 +117,27 @@ def _status(agent: Agent, company: Any, device_id: str | None = None) -> dict[st
     night = bool(agent.schedule and agent.schedule.is_night)
     today = services._accepted_today(agent, now, tz, night)
     device = Device.objects.filter(agent=agent, is_active=True).first()
-    bound = device is not None and (
-        device_id is None or device.fingerprint_hash == fingerprint_hash(device_id)
-    )
+    digest = fingerprint_hash(device_id) if device_id else None
+    bound = device is not None and (digest is None or device.fingerprint_hash == digest)
+    # What the agent app explains on this phone (RG-13): first activation, another phone already
+    # linked (change to request), or a change waiting for HR.
+    if device is None:
+        phone_state = "unbound"
+    elif bound:
+        phone_state = "this"
+    elif DeviceChangeRequest.objects.filter(
+        agent=agent, status=DeviceChangeRequest.Status.PENDING, fingerprint_hash=digest
+    ).exists():
+        phone_state = "change_pending"
+    else:
+        phone_state = "other"
     punches = [rules.Punch(at=c.effective_ts, direction=c.direction) for c in today]
     return {
         "agent_id": agent.id,
         "agent_name": agent.full_name,
         "employee_number": agent.employee_number,
         "device_bound": bound,
+        "phone_state": phone_state,
         "next_direction": rules.next_direction(punches),
         "site_name": agent.site.name if agent.site else None,
         "schedule": str(agent.schedule) if agent.schedule else None,

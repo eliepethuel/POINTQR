@@ -54,7 +54,8 @@ def bind_device(agent: Agent, raw_fingerprint: str, *, model: str = "", os: str 
     if current is not None:
         if current.fingerprint_hash == digest:
             return current
-        DeviceChangeRequest.objects.get_or_create(
+        # One pending request per agent, for the phone that asked last.
+        DeviceChangeRequest.objects.update_or_create(
             agent=agent,
             status=DeviceChangeRequest.Status.PENDING,
             defaults={"fingerprint_hash": digest, "model": model, "os": os},
