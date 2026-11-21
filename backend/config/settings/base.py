@@ -118,7 +118,16 @@ TEMPLATES = [
 # --- Database -----------------------------------------------------------------------------------
 DATABASES = {"default": env.db("DATABASE_URL")}
 # Transactions are opened by TenantMiddleware (ADR-0011), not ATOMIC_REQUESTS.
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+# Under ASGI, persistent per-thread connections pile up until Postgres refuses clients (seen in
+# the R10 load test): a psycopg pool is used instead. Tenant settings are transaction-local
+# (set_config(..., true)), so a pooled connection never leaks one company's scope (ADR-0012).
+DATABASES["default"]["CONN_MAX_AGE"] = 0
+if env.bool("DB_POOL", default=True):
+    DATABASES["default"].setdefault("OPTIONS", {})["pool"] = {
+        "min_size": env.int("DB_POOL_MIN", default=2),
+        "max_size": env.int("DB_POOL_MAX", default=10),
+        "timeout": env.int("DB_POOL_TIMEOUT", default=10),
+    }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Passwords (ENF-09) -------------------------------------------------------------------------
