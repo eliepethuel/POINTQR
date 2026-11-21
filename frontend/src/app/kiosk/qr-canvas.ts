@@ -66,6 +66,7 @@ export class QrCanvas {
   private readonly slot = signal(0);
   private previous: Matrix | null = null;
   private frame = 0;
+  private settle: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     effect(() => this.draw(this.value()));
@@ -74,7 +75,10 @@ export class QrCanvas {
       if (this.slot() && this.previous) this.paint(this.previous, null, 1, null);
     });
     const destroyRef = inject(DestroyRef);
-    destroyRef.onDestroy(() => cancelAnimationFrame(this.frame));
+    destroyRef.onDestroy(() => {
+      cancelAnimationFrame(this.frame);
+      clearTimeout(this.settle);
+    });
     afterNextRender(() => {
       if (typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(([entry]) =>
@@ -94,7 +98,10 @@ export class QrCanvas {
   }
 
   private draw(text: string): void {
-    const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
+    // Level L: a code shown on a screen is never damaged, and the lower density matters. At
+    // level M our ~110-character tokens need a version 7 QR that ZXing failed to read for
+    // whole 30 s windows; level L gives versions 5-6 with larger modules, all read.
+    const qr = QRCode.create(text, { errorCorrectionLevel: 'L' });
     const next: Matrix = { size: qr.modules.size, data: qr.modules.data };
     const old = this.previous && this.previous.size === next.size ? this.previous : null;
     this.previous = next;
@@ -112,6 +119,13 @@ export class QrCanvas {
       if (progress < 1) this.frame = requestAnimationFrame(step);
     };
     this.frame = requestAnimationFrame(step);
+    // Animation frames pause when the page is hidden or throttled: the code must never stay
+    // frozen half-way between two QR codes (unreadable), so the final state is guaranteed.
+    clearTimeout(this.settle);
+    this.settle = setTimeout(() => {
+      cancelAnimationFrame(this.frame);
+      if (this.previous === next) this.paint(next, null, 1, null);
+    }, DISSOLVE_MS + 50);
   }
 
   private paint(
