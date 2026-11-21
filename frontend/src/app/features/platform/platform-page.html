@@ -207,7 +207,7 @@
           <dd class="pq-mono">{{ form.slug }}.pointqr.ci</dd>
           <dt>Formule</dt>
           <dd>
-            {{ plans[form.plan] ?? form.plan }} · {{ form.max_agents }} agents ·
+            {{ plans[form.plan ?? ''] ?? form.plan }} · {{ form.max_agents }} agents ·
             {{ form.max_sites }} sites · {{ form.max_kiosks }} bornes
           </dd>
           <dt>Administrateur</dt>
