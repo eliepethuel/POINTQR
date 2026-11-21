@@ -48,6 +48,7 @@ auth_urls = [
     path("refresh/", accounts.RefreshView.as_view(), name="refresh"),
     path("logout/", accounts.LogoutView.as_view(), name="logout"),
     path("me/", accounts.MeView.as_view(), name="me"),
+    path("activation/", accounts.ActivationView.as_view(), name="activation"),
 ]
 
 api_v1: list[URLPattern | URLResolver] = [

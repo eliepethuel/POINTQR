@@ -1,6 +1,6 @@
 from typing import Any
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -9,11 +9,14 @@ from rest_framework.views import APIView
 
 from apps.audit.services import record
 from apps.tenancy.resolver import REFRESH_COOKIE
+from common.exceptions import DomainError
 
-from . import services
+from . import invitations, services
 from .models import User
 from .permissions import IsCompanyAdmin
 from .serializers import (
+    ActivationInfoSerializer,
+    ActivationSerializer,
     AuthResponseSerializer,
     LoginSerializer,
     MeSerializer,
@@ -63,6 +66,47 @@ class LoginView(AuthThrottled):
         if outcome.step == "mfa_setup":
             body |= {"otpauth_url": outcome.otpauth_url, "secret": outcome.secret}
         return Response(body)
+
+
+class ActivationView(AuthThrottled):
+    """EF-09: an invited agent checks their link, then chooses a password and is signed in."""
+
+    @extend_schema(
+        operation_id="auth_activation_check",
+        parameters=[
+            OpenApiParameter("entreprise", str, required=True),
+            OpenApiParameter("jeton", str, required=True),
+        ],
+        responses=ActivationInfoSerializer,
+        tags=["auth"],
+    )
+    def get(self, request: Request) -> Response:
+        company = services.resolve_login_company(None, request.query_params.get("entreprise", ""))
+        if company is None:
+            raise DomainError("Code entreprise manquant.", code="unknown_company", status_code=404)
+        return Response(invitations.check(company, request.query_params.get("jeton", "")))
+
+    @extend_schema(
+        operation_id="auth_activate",
+        request=ActivationSerializer,
+        responses=AuthResponseSerializer,
+        tags=["auth"],
+    )
+    def post(self, request: Request) -> Response:
+        data = ActivationSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        company = services.resolve_login_company(None, data.validated_data["company_code"])
+        if company is None:
+            raise DomainError("Code entreprise manquant.", code="unknown_company", status_code=404)
+        user = invitations.activate(
+            company,
+            data.validated_data["token"],
+            data.validated_data["password"],
+            request=request._request,
+        )
+        if user.mfa_required:  # privileged account: the usual sign-in with its second factor
+            return Response({"step": "activated"})
+        return _authenticated(user, issue_tokens(user, mfa=False))
 
 
 class MfaVerifyView(AuthThrottled):
