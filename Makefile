@@ -7,7 +7,7 @@ export
 OWNER_DB = DATABASE_URL=$(MIGRATION_DATABASE_URL)
 
 .PHONY: env db-init install migrate api worker beat front test test-back test-front lint lint-back \
-        lint-front format openapi client seed e2e
+        lint-front format openapi client seed e2e docker-up docker-down docker-seed
 
 env:
 	@./infra/scripts/init-env.sh
@@ -69,3 +69,13 @@ client: openapi
 
 e2e:
 	cd frontend && npx playwright test
+
+# Full stack in containers on http://localhost:8080 (ADR-0014)
+docker-up:
+	docker compose up -d --build
+
+docker-down:
+	docker compose down
+
+docker-seed:
+	docker compose --profile demo run --rm seed
