@@ -273,6 +273,10 @@ def _beat_schedule() -> dict[str, Any]:
 
 CELERY_BEAT_SCHEDULE = _beat_schedule()
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PointQR <no-reply@pointqr.ci>")
+# Public address of the web application, used in the links sent by e-mail (EF-09 invitations).
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:4200").rstrip("/")
+#: Validity of an agent activation link, in days.
+ACTIVATION_DAYS = env.int("ACTIVATION_DAYS", default=7)
 
 LOGGING = {
     "version": 1,
