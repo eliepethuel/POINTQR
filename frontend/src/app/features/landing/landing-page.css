@@ -1,0 +1,453 @@
+:host {
+  display: block;
+  --gutter: clamp(16px, 5vw, 64px);
+}
+section {
+  padding: clamp(56px, 9vw, 120px) var(--gutter);
+  position: relative;
+}
+h2 {
+  margin: 0 0 28px;
+  font: 700 clamp(1.8rem, 4vw, 3rem) / 1.08 var(--pq-font-display);
+  letter-spacing: -0.03em;
+  max-width: 900px;
+}
+h3 {
+  margin: 0 0 8px;
+  font: 600 1.15rem var(--pq-font-display);
+}
+p {
+  line-height: 1.55;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px var(--gutter);
+  background: var(--pq-glass);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--pq-border);
+}
+.nav nav {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+}
+.nav nav a {
+  color: var(--pq-text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.nav nav a:hover {
+  color: var(--pq-text);
+}
+.brand {
+  font: 700 1.25rem var(--pq-font-display);
+  color: var(--pq-text);
+  text-decoration: none;
+}
+.brand span {
+  color: var(--pq-accent);
+}
+
+/* Hero: title words slide up (transform only, painted at first frame: good LCP) */
+.hero {
+  min-height: calc(100svh - 64px);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: center;
+  gap: 40px;
+  overflow: hidden;
+}
+.hero-text,
+.hero-qr {
+  position: relative;
+}
+.eyebrow {
+  margin: 0 0 18px;
+  font: 500 0.8125rem var(--pq-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pq-highlight);
+}
+.title {
+  margin: 0;
+  font: 700 clamp(2.8rem, 7.5vw, 6.5rem) / 0.98 var(--pq-font-display);
+  letter-spacing: -0.04em;
+}
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  margin-right: 0.22em;
+}
+.word > span {
+  display: inline-block;
+  animation: rise 900ms var(--pq-ease-out-expo) both;
+}
+@keyframes rise {
+  from {
+    transform: translateY(105%) rotate(4deg);
+  }
+}
+.lead {
+  max-width: 600px;
+  margin: 28px 0 0;
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  color: var(--pq-text-muted);
+}
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+.big {
+  min-height: 52px;
+  padding: 0 26px;
+  font-size: 1rem;
+}
+.clock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  color: var(--pq-text-muted);
+}
+.clock .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pq-success);
+}
+.hero-qr {
+  display: grid;
+  place-items: center;
+}
+.qr-float {
+  position: relative;
+  width: min(36vw, 420px);
+  animation: float 6s ease-in-out infinite;
+}
+.qr-float pq-qr-canvas {
+  display: block;
+  box-shadow:
+    0 40px 120px -30px rgb(124 92 255 / 0.65),
+    0 0 0 1px var(--pq-border);
+  border-radius: 18px;
+}
+.qr-ring {
+  position: absolute;
+  inset: -8%;
+  border-radius: 28px;
+  border: 2px solid rgb(212 255 58 / 0.6);
+  animation: ring 3.5s ease-in-out infinite;
+}
+@keyframes float {
+  50% {
+    transform: translateY(-14px) rotate(-1.5deg);
+  }
+}
+@keyframes ring {
+  0% {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+
+.cards,
+.steps ol,
+.mode-grid,
+.flip-grid,
+.figures {
+  display: grid;
+  gap: 16px;
+}
+.cards {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.problem-card {
+  margin: 0;
+  font-size: 1.05rem;
+  border-left: 3px solid var(--pq-danger);
+}
+.steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.step .n {
+  display: block;
+  margin-bottom: 18px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--pq-accent);
+}
+.step p,
+.mode p {
+  margin: 0;
+  color: var(--pq-text-muted);
+}
+
+/* RG-02 timeline drawn on scroll */
+.track {
+  position: relative;
+  height: 8px;
+  margin: 72px 0 20px;
+  border-radius: 999px;
+  background: var(--pq-surface-2);
+}
+.track-fill {
+  position: absolute;
+  inset: 0 20% 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pq-accent), var(--pq-highlight) 55%, var(--pq-danger));
+  transform-origin: left;
+}
+.tolerance {
+  position: absolute;
+  left: 25%;
+  width: 25%;
+  bottom: 18px;
+  padding-top: 6px;
+  border-top: 2px dashed var(--pq-highlight);
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--pq-highlight);
+}
+.ticks {
+  position: relative;
+  height: 60px;
+}
+.tick {
+  position: absolute;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  font: 600 1rem var(--pq-font-mono);
+  color: var(--pq-text-muted);
+}
+.tick small {
+  font: 400 0.75rem var(--pq-font-body);
+}
+.tick.strong {
+  color: var(--pq-text);
+}
+.tick.coral {
+  color: var(--pq-danger);
+}
+.verdict {
+  display: inline-block;
+  margin: 16px 0 0;
+  padding: 16px 24px;
+  border-radius: 18px;
+  background: rgb(255 107 74 / 0.12);
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+}
+.verdict strong {
+  color: var(--pq-danger);
+}
+
+/* Fraud → parade flip cards */
+.hint {
+  margin: -16px 0 24px;
+  color: var(--pq-text-muted);
+}
+.flip-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.flip {
+  position: relative;
+  min-height: 170px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  perspective: 1000px;
+}
+.face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 22px;
+  border-radius: var(--pq-radius-lg);
+  border: 1px solid var(--pq-border);
+  font: 600 1.1rem / 1.35 var(--pq-font-display);
+  backface-visibility: hidden;
+  transition: transform 700ms var(--pq-ease-out-back);
+}
+.face small {
+  font: 500 0.75rem var(--pq-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.front {
+  background: var(--pq-surface);
+}
+.front small {
+  color: var(--pq-danger);
+}
+.back {
+  background: rgb(61 220 151 / 0.12);
+  transform: rotateY(180deg);
+}
+.back small {
+  color: var(--pq-success);
+}
+.flip:hover .front,
+.flip.flipped .front {
+  transform: rotateY(-180deg);
+}
+.flip:hover .back,
+.flip.flipped .back {
+  transform: rotateY(0deg);
+}
+
+.mode-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.mode {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.letter {
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--pq-highlight);
+}
+
+.artci {
+  margin: 0 var(--gutter);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+}
+.artci ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 18px;
+  color: var(--pq-text-muted);
+}
+.shield {
+  margin: 0;
+  font-size: clamp(6rem, 16vw, 12rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--pq-success);
+}
+
+.figures {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.figures .v {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 700;
+  color: var(--pq-highlight);
+}
+.figures p:last-child {
+  margin: 8px 0 0;
+  color: var(--pq-text-muted);
+}
+
+.architecture svg {
+  width: 100%;
+  height: auto;
+}
+.wire {
+  stroke: var(--pq-accent);
+  stroke-dasharray: 300;
+  filter: drop-shadow(0 0 6px rgb(124 92 255 / 0.8));
+}
+.node {
+  fill: var(--pq-surface);
+  stroke: var(--pq-border);
+}
+.node.core {
+  fill: rgb(124 92 255 / 0.18);
+  stroke: var(--pq-accent);
+}
+.architecture text {
+  fill: var(--pq-text);
+  font: 600 14px var(--pq-font-body);
+}
+.core-text {
+  font-size: 17px !important;
+}
+
+.cta {
+  overflow: hidden;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+}
+.cta h2,
+.cta p,
+.cta a {
+  position: relative;
+}
+.cta p {
+  margin: -12px 0 28px;
+  color: var(--pq-text-muted);
+}
+.footer {
+  display: flex;
+  gap: 20px;
+  padding: 24px var(--gutter);
+  border-top: 1px solid var(--pq-border);
+  color: var(--pq-text-muted);
+  font-size: 0.875rem;
+}
+.footer a {
+  color: inherit;
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .qr-float {
+    width: min(70vw, 340px);
+  }
+  .nav nav {
+    display: none;
+  }
+  .artci {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .word > span,
+  .qr-float,
+  .qr-ring {
+    animation: none;
+  }
+  .face {
+    transition: none;
+  }
+}
+:root[data-motion='reduced'] .word > span,
+:root[data-motion='reduced'] .qr-float,
+:root[data-motion='reduced'] .qr-ring {
+  animation: none;
+}
