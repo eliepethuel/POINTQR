@@ -14,7 +14,7 @@ from apps.schedules.selectors import day_schedule, is_holiday
 from common.crypto import encrypt, new_secret_key
 
 from . import workdays
-from .models import CheckIn, Mode, RefusalCode, Result, Trust
+from .models import CheckIn, Mode, RefusalCode, Result, Trust, WorkDay
 
 DAYS = 30
 
@@ -156,6 +156,64 @@ def add_history(demo: Any, rng: random.Random) -> None:
         day += timedelta(days=1)
     CheckIn.objects.bulk_create(rows, batch_size=2000)
     workdays.recompute_range(start, now.date(), agents=demo.agents)
+    _pending_requests(demo, tz, now)
+
+
+def _pending_requests(demo: Any, tz: ZoneInfo, now: datetime) -> None:
+    """A few requests waiting for a decision, so the approval circuit can be shown (EF-29)."""
+    from apps.accounts.models import Role, User
+    from apps.requests_app import services as requests
+
+    hr = (
+        User.objects.filter(roles__contains=[Role.HR]).first()
+        or User.objects.filter(roles__contains=[Role.COMPANY_ADMIN]).first()
+    )
+    if hr is None:
+        return
+    recent = WorkDay.objects.filter(
+        agent__in=demo.agents, date__gte=now.date() - timedelta(days=10), date__lt=now.date()
+    ).select_related("agent")
+    agent_user = User.objects.filter(agent__isnull=False, roles__contains=[Role.AGENT]).first()
+
+    def author_for(agent: Agent) -> User:
+        return agent_user if agent_user and agent_user.agent_id == agent.id else hr
+
+    late = recent.filter(status=WorkDay.Status.LATE).order_by("-date").first()
+    if late:
+        requests.create(
+            company=demo.company,
+            agent=late.agent,
+            author=author_for(late.agent),
+            kind="justification",
+            category="late",
+            target_date=late.date,
+            reason="Embouteillage sur le pont Houphouët-Boigny, accident signalé à la radio.",
+        )
+    missing = recent.filter(incomplete=True).order_by("-date").first()
+    planned = day_schedule(missing.agent, missing.date, tz) if missing else None
+    if missing and planned and planned.end and planned.end < now:
+        requests.create(
+            company=demo.company,
+            agent=missing.agent,
+            author=author_for(missing.agent),
+            kind="correction",
+            category="missing_checkin",
+            target_date=missing.date,
+            reason="J'ai oublié de pointer ma sortie, le chef de service peut confirmer.",
+            requested_direction="out",
+            requested_time=planned.end,
+        )
+    absent = recent.filter(status=WorkDay.Status.ABSENT).order_by("-date").first()
+    if absent:
+        requests.create(
+            company=demo.company,
+            agent=absent.agent,
+            author=author_for(absent.agent),
+            kind="justification",
+            category="absence",
+            target_date=absent.date,
+            reason="Rendez-vous médical au CHU de Cocody (certificat transmis au RH).",
+        )
 
 
 __all__ = ["DAYS", "add_history", "date"]
