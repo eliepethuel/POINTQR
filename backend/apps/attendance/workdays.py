@@ -85,9 +85,15 @@ def recompute(
     tz = ZoneInfo(company.timezone or "Africa/Abidjan")
     planned = day_schedule(agent, day, tz) or rules.DaySchedule(works=False)
     night = bool(planned.start and planned.end and planned.end.date() > planned.start.date())
+    punches = punches_for(agent, day, tz, night)
+    # Nobody is absent before joining: no day before the agent was created in PointQR, unless
+    # they checked in that day (history imported with real check-ins).
+    if not punches and agent.created_at and day < agent.created_at.astimezone(tz).date():
+        WorkDay.objects.filter(agent=agent, date=day).delete()
+        return None
     result = rules.compute_day(
         planned,
-        punches_for(agent, day, tz, night),
+        punches,
         now=(now or timezone.now()).astimezone(tz),
         holiday=is_holiday(day, company.country),
         justifications=_justifications(agent, day),

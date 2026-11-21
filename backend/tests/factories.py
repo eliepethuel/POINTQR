@@ -1,7 +1,7 @@
 """Shared factories. Tenant-scoped objects are created inside their company's tenant context."""
 
 import uuid
-from datetime import date, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -94,6 +94,16 @@ class AgentFactory(TenantFactory):
     last_name = factory.Sequence(lambda n: f"KOUASSI{n}")
     first_names = "Aya"
     badge_key = factory.LazyFunction(lambda: encrypt(new_secret_key()))
+
+    @classmethod
+    def _create(cls, model_class: Any, *args: Any, **kwargs: Any) -> Any:
+        # Test agents joined long before the simulated days (no day counts before joining).
+        joined = kwargs.pop("joined", datetime(2025, 1, 1, tzinfo=UTC))
+        agent = super()._create(model_class, *args, **kwargs)
+        with tenant_context(agent.company_id):
+            Agent.objects.filter(pk=agent.pk).update(created_at=joined)
+        agent.created_at = joined
+        return agent
 
 
 class DeviceFactory(TenantFactory):
