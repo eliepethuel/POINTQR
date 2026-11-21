@@ -4790,6 +4790,16 @@ components:
           type: string
         device_bound:
           type: boolean
+        phone_state:
+          allOf:
+          - $ref: '#/components/schemas/PhoneStateEnum'
+          description: |-
+            unbound : à activer · this : ce téléphone · other : un autre téléphone est lié · change_pending : changement demandé, en attente du RH
+
+            * `unbound` - unbound
+            * `this` - this
+            * `other` - other
+            * `change_pending` - change_pending
         next_direction:
           type: string
         site_name:
@@ -4808,6 +4818,7 @@ components:
       - device_bound
       - employee_number
       - next_direction
+      - phone_state
       - schedule
       - site_name
       - today
@@ -6070,6 +6081,18 @@ components:
       required:
       - device_id
       - token
+    PhoneStateEnum:
+      enum:
+      - unbound
+      - this
+      - other
+      - change_pending
+      type: string
+      description: |-
+        * `unbound` - unbound
+        * `this` - this
+        * `other` - other
+        * `change_pending` - change_pending
     PlanEnum:
       enum:
       - starter
