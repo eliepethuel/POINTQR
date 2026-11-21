@@ -141,7 +141,8 @@ export async function showToCamera(
 ): Promise<void> {
   const src = qr.png
     ? `data:image/png;base64,${qr.png.toString('base64')}`
-    : await QRCode.toDataURL(qr.token!, { margin: 2, width: 500 });
+    : // Same error correction level as the kiosk (L): see qr-canvas.ts.
+      await QRCode.toDataURL(qr.token!, { errorCorrectionLevel: 'L', margin: 4, scale: 8 });
   await page.bringToFront();
   await page.evaluate(
     (s) => (window as unknown as { __pqShow(s: string): Promise<boolean> }).__pqShow(s),
