@@ -59,11 +59,17 @@ def test_summary_cumulates_lateness(scene, hr_x):
     assert (summary["late_count"], summary["late_minutes"]) == (3, 45)
 
 
-def test_rg14_closed_period_is_frozen_until_reopened(scene, admin_x, hr_x, make_client):
+def test_rg14_closed_period_is_frozen_until_reopened(
+    scene, admin_x, hr_x, make_client, django_capture_on_commit_callbacks
+):
     period = hr_x.post("/api/v1/periods/", {"month": "2026-11-01"}, format="json").json()
     with time_machine.travel(at(23, 50, day=30), tick=False):
         hr = make_client(scene.company, Role.HR)
-        assert hr.post(f"/api/v1/periods/{period['id']}/close/").status_code == 200
+        with django_capture_on_commit_callbacks(execute=True):
+            closing = hr.post(f"/api/v1/periods/{period['id']}/close/")
+        assert closing.status_code == 202  # recomputed and frozen by a background job
+        listed = hr.get("/api/v1/periods/").json()["results"]
+        assert [p["status"] for p in listed if p["id"] == period["id"]] == ["closed"]
         frozen = hr.post(
             "/api/v1/workdays/recompute/",
             {"start": "2026-11-16", "end": "2026-11-16"},
