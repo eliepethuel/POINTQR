@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from django.db.models import Count, Exists, OuterRef, QuerySet
+from django.db.models.functions import Now
 
 from .models import Agent, Device, OrgUnit, Site
 
@@ -14,9 +15,22 @@ def sites_with_counts() -> QuerySet[Site]:
 
 
 def agents_list() -> QuerySet[Agent]:
+    from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
+
+    from apps.accounts.models import ActivationInvite, User
+
     active_device = Device.objects.filter(agent=OuterRef("pk"), is_active=True)
+    # Account state for EF-09: no usable password yet = the invitation is not used.
+    active_account = User.objects.filter(agent=OuterRef("pk")).exclude(
+        password__startswith=UNUSABLE_PASSWORD_PREFIX
+    )
+    pending_invite = ActivationInvite.objects.filter(
+        user__agent=OuterRef("pk"), used_at__isnull=True, expires_at__gt=Now()
+    )
     return Agent.objects.select_related("site", "org_unit").annotate(
-        has_device=Exists(active_device)
+        has_device=Exists(active_device),
+        has_active_account=Exists(active_account),
+        has_pending_invite=Exists(pending_invite),
     )
 
 

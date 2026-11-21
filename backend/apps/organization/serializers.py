@@ -1,5 +1,6 @@
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Agent, Device, DeviceChangeRequest, OrgUnit, Site
@@ -64,6 +65,9 @@ class AgentSerializer(serializers.ModelSerializer[Agent]):
     site_name = serializers.CharField(source="site.name", read_only=True, default=None)
     org_unit_name = serializers.CharField(source="org_unit.name", read_only=True, default=None)
     has_device = serializers.BooleanField(read_only=True, required=False)
+    account = serializers.SerializerMethodField(
+        help_text="none : pas encore invité · invited : lien envoyé · active : compte activé"
+    )
 
     class Meta:
         model = Agent
@@ -83,6 +87,7 @@ class AgentSerializer(serializers.ModelSerializer[Agent]):
             "schedule",
             "status",
             "has_device",
+            "account",
             "created_at",
         ]
         read_only_fields = [
@@ -93,6 +98,23 @@ class AgentSerializer(serializers.ModelSerializer[Agent]):
             "has_device",
             "created_at",
         ]
+
+    @extend_schema_field(
+        serializers.ChoiceField(
+            choices=[("none", "none"), ("invited", "invited"), ("active", "active")]
+        )
+    )
+    def get_account(self, agent: Agent) -> str:
+        """EF-09 account state; annotated by ``selectors.agents_list``, computed otherwise."""
+        active = getattr(agent, "has_active_account", None)
+        if active is not None:
+            if active:
+                return "active"
+            return "invited" if getattr(agent, "has_pending_invite", False) else "none"
+        from apps.accounts.invitations import account_state
+        from apps.accounts.models import User
+
+        return account_state(User.objects.filter(agent=agent).first())
 
 
 class DeviceSerializer(serializers.ModelSerializer[Device]):
@@ -115,6 +137,22 @@ class ImportErrorSerializer(serializers.Serializer[Any]):
     line = serializers.IntegerField()
     field = serializers.CharField()
     message = serializers.CharField()
+
+
+class InvitationSerializer(serializers.Serializer[Any]):
+    username = serializers.CharField()
+    link = serializers.CharField(
+        help_text="Lien d'activation, à afficher en QR si l'agent n'a pas d'e-mail"
+    )
+    expires_at = serializers.DateTimeField()
+    sent_to = serializers.CharField(allow_blank=True)
+
+
+class InviteAllSerializer(serializers.Serializer[Any]):
+    invited = serializers.IntegerField()
+    emailed = serializers.IntegerField()
+    without_email = serializers.IntegerField()
+    skipped = serializers.IntegerField()
 
 
 class ImportReportSerializer(serializers.Serializer[Any]):
