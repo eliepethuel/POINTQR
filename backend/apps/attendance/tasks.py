@@ -16,7 +16,7 @@ from apps.tenancy.models import Company
 from apps.tenancy.scoping import for_each_active_company
 
 from . import workdays
-from .models import WorkDay
+from .models import Period, WorkDay
 
 ALERT_DELAY = timedelta(minutes=30)
 
@@ -132,3 +132,25 @@ def beat_schedule() -> dict[str, dict[str, Any]]:
             "schedule": crontab(minute="*/15", hour="5-12"),
         },
     }
+
+
+@shared_task(name="attendance.close_period")
+def close_period(company_id: str, period_id: str, user_id: str) -> str:
+    """Monthly closing (RG-14): recompute every day of the month, then freeze it."""
+    from apps.accounts.models import User
+    from apps.audit.services import record
+
+    with tenant_context(company_id):
+        period = Period.objects.get(id=period_id)
+        if period.status == Period.Status.CLOSED:
+            return period.status
+        first = period.month
+        last = (first.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        workdays.recompute_range(first, min(last, timezone.localdate()))
+        actor = User.objects.get(id=user_id)
+        period.status = Period.Status.CLOSED
+        period.closed_at = timezone.now()
+        period.closed_by = actor
+        period.save()
+        record("period.closed", period, actor=actor)
+        return period.status
