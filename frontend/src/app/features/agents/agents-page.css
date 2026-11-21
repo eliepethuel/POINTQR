@@ -117,3 +117,19 @@ h3 {
     display: none;
   }
 }
+
+.invitation {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: var(--pq-radius);
+  background: var(--pq-surface-2);
+}
+.invitation p {
+  margin: 0;
+}
+.invite-qr {
+  width: min(240px, 100%);
+}
