@@ -15,6 +15,12 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = "DENY"
 
+# Outgoing e-mail (reports, notifications): smtp://user:password@host:port, smtp+tls://...
+vars().update(env.email_url("EMAIL_URL", default="smtp://localhost:25"))
+
+# Client IP behind the reverse proxy (throttling ENF-11): trust the last N X-Forwarded-For hops.
+REST_FRAMEWORK["NUM_PROXIES"] = env.int("NUM_PROXIES", default=1)
+
 # Files on any S3-compatible service (ADR-0009); local disk if no endpoint is configured.
 if env("S3_ENDPOINT_URL", default=""):
     STORAGES = {
