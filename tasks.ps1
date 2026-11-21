@@ -134,7 +134,8 @@ function Start-InWindow([string]$Title, [string]$TaskName) {
 function Start-Garnet {
   $garnet = Get-Command garnet-server -ErrorAction SilentlyContinue
   if (-not $garnet) { throw 'garnet-server not found: dotnet tool install --global garnet-server' }
-  & $garnet.Source --port 6379
+  # --lua: Celery (kombu) relies on Lua scripts, disabled by default in Garnet.
+  & $garnet.Source --port 6379 --lua
 }
 
 switch ($Target) {
@@ -156,7 +157,7 @@ switch ($Target) {
   }
   'redis'      { Start-Garnet }
   'api'        { Invoke-Checked $Backend { uv run uvicorn config.asgi:application --reload --port 8000 } }
-  'worker'     { Invoke-Checked $Backend { uv run celery -A config worker -l info --pool=solo } }
+  'worker'     { Invoke-Checked $Backend { uv run celery -A config worker -l info --pool=solo --without-mingle --without-gossip } }
   'beat'       { Invoke-Checked $Backend { uv run celery -A config beat -l info } }
   'front'      { Invoke-Checked $Frontend { npm start } }
   'shell'      { Invoke-Checked $Backend { uv run python manage.py shell } }
