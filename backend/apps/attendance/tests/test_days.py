@@ -220,3 +220,36 @@ def test_holiday_overrides_lateness(scene):
     with tenant_context(scene.company.id):
         day = WorkDay.objects.get(agent=scene.agent, date=date(2026, 11, 16))
         assert (day.status, day.late_minutes) == ("holiday", 0)
+
+
+def test_phone_state_tells_the_agent_what_to_do(scene):
+    """RG-13 on the agent app: this phone, another phone (change to request), change pending."""
+    client = scene.agent_client
+
+    def state(device: str) -> str:
+        return client.get("/api/v1/mobile/status/", {"device_id": device}).json()["phone_state"]
+
+    assert state("phone-aya") == "this"
+    assert state("new-phone") == "other"
+    refused = client.post("/api/v1/mobile/activate/", {"device_id": "new-phone"}, format="json")
+    assert refused.status_code == 409 and refused.json()["code"] == "device_change_pending"
+    assert state("new-phone") == "change_pending"
+    assert state("third-phone") == "other"
+    # The pending request follows the phone that asked last.
+    client.post("/api/v1/mobile/activate/", {"device_id": "third-phone"}, format="json")
+    assert state("third-phone") == "change_pending"
+    assert state("new-phone") == "other"
+
+
+def test_no_absence_before_the_agent_joined(scene, make_client):
+    """A recent hire is not absent on the days before they were created in PointQR."""
+    from apps.attendance import workdays
+
+    newcomer = factories.AgentFactory(
+        company=scene.company, schedule=scene.agent.schedule, joined=at(12, 0, day=18)
+    )
+    with time_machine.travel(at(23, 0, day=19), tick=False), tenant_context(scene.company.id):
+        workdays.recompute_range(date(2026, 11, 16), date(2026, 11, 19), agents=[newcomer])
+        statuses = dict(WorkDay.objects.filter(agent=newcomer).values_list("date", "status"))
+    assert date(2026, 11, 17) not in statuses  # before joining: nothing
+    assert statuses[date(2026, 11, 19)] == "absent"  # after joining: a real absence
