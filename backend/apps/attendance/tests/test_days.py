@@ -104,6 +104,16 @@ def test_dashboard_today_kpis(scene, make_client):
     assert body["sites"][0]["present"] == 1
 
 
+def test_arrivals_chart_covers_night_arrivals(scene, make_client):
+    """Office hours by default, widened to the hours that had arrivals (night shifts)."""
+    with time_machine.travel(at(21, 30), tick=False):
+        scene.scan(at(21, 30))
+        body = make_client(scene.company, Role.HR).get("/api/v1/dashboard/today/").json()
+    hours = {h["hour"]: h["count"] for h in body["arrivals_by_hour"]}
+    assert hours[21] == 1
+    assert min(hours) == 5 and max(hours) == 21
+
+
 def test_manager_dashboard_is_limited_to_their_units(scene, make_client):
     unit = factories.OrgUnitFactory(company=scene.company)
     manager = factories.AgentFactory(company=scene.company, org_unit=unit)

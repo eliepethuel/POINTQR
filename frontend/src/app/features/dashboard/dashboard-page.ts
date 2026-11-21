@@ -64,7 +64,8 @@ export class DashboardPage {
   protected readonly kpis = computed(() => this.data.value()?.kpis);
   protected readonly punctuality = computed(() => {
     const k = this.kpis();
-    return k && k.present ? Math.round(((k.present - k.late) / k.present) * 100) : 100;
+    // Nobody arrived yet (or a day off): there is nothing to measure, not « 100 % ».
+    return k && k.present ? `${Math.round(((k.present - k.late) / k.present) * 100)} %` : '—';
   });
 
   protected readonly mapSites = computed<readonly MapSite[]>(() =>
@@ -89,6 +90,7 @@ export class DashboardPage {
       },
       yAxis: {
         type: 'value',
+        minInterval: 1, // a number of people: no 0.2 / 0.4 ticks
         splitLine: { lineStyle: { color: 'rgba(154,156,176,0.15)' } },
         axisLabel: { color: '#9A9CB0' },
       },
