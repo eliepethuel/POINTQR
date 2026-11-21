@@ -1,23 +1,27 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-const RADIUS = 46;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-/** Circular 30-second countdown around the kiosk QR; turns coral in the last 5 seconds. */
+/**
+ * 30-second countdown drawn as a rounded square around the kiosk QR card; turns coral in the
+ * last 5 seconds. It stays outside the card so it never touches the QR quiet zone (a circle
+ * crossed the card corners and hindered scanning).
+ */
 @Component({
   selector: 'pq-countdown-ring',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle class="track" cx="50" cy="50" [attr.r]="radius" />
-      <circle
+      <rect class="track" x="4" y="4" width="92" height="92" rx="9" pathLength="100" />
+      <rect
         class="bar"
         [class.ending]="remaining() <= 5"
-        cx="50"
-        cy="50"
-        [attr.r]="radius"
-        [attr.stroke-dasharray]="circumference"
-        [attr.stroke-dashoffset]="circumference * (1 - fraction())"
+        x="4"
+        y="4"
+        width="92"
+        height="92"
+        rx="9"
+        pathLength="100"
+        stroke-dasharray="100"
+        [attr.stroke-dashoffset]="100 * (1 - fraction())"
       />
     </svg>
     <span class="seconds pq-mono" aria-live="off">{{ remaining() }} s</span>
@@ -31,11 +35,11 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     svg {
       width: 100%;
       height: 100%;
-      transform: rotate(-90deg);
+      overflow: visible;
     }
-    circle {
+    rect {
       fill: none;
-      stroke-width: 2.2;
+      stroke-width: 1.6;
     }
     .track {
       stroke: rgb(255 255 255 / 0.12);
@@ -52,8 +56,9 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     }
     .seconds {
       position: absolute;
-      right: 4%;
-      bottom: 2%;
+      left: 50%;
+      bottom: -9%;
+      translate: -50% 0;
       font-size: clamp(0.9rem, 1.6vw, 1.2rem);
       color: var(--pq-text-muted);
     }
@@ -63,6 +68,4 @@ export class CountdownRing {
   /** 1 → 0 over the 30-second window. */
   readonly fraction = input.required<number>();
   readonly remaining = input.required<number>();
-  protected readonly radius = RADIUS;
-  protected readonly circumference = CIRCUMFERENCE;
 }
