@@ -179,7 +179,7 @@ REST_FRAMEWORK = {
         "auth": "20/min",
         "refresh": "60/min",
         "checkin_device": "12/min",
-        "checkin_ip": "600/min",
+        "checkin_ip": env("CHECKIN_IP_RATE", default="600/min"),
         "kiosk": "1200/min",
     },
 }
