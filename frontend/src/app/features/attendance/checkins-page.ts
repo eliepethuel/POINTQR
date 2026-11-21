@@ -68,6 +68,11 @@ const MODE_LABELS: Record<string, string> = {
                   @if (c.offline) {
                     <span class="pq-badge">hors-ligne</span>
                   }
+                  @if (c.is_correction) {
+                    <span class="pq-badge" title="Ajouté par une correction validée (EF-31)"
+                      >correction</span
+                    >
+                  }
                 </td>
                 <td>
                   {{ c.agent_name ?? 'Inconnu' }}
