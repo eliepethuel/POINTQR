@@ -190,3 +190,9 @@
   background: var(--pq-surface-2);
   font: 0.75rem var(--pq-font-mono);
 }
+/* Touch screens have no keyboard shortcut to advertise. */
+@media (max-width: 640px), (pointer: coarse) {
+  .search kbd {
+    display: none;
+  }
+}
