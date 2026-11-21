@@ -1524,8 +1524,8 @@ paths:
   /api/v1/periods/{id}/close/:
     post:
       operationId: periods_close
-      description: Monthly closing for payroll; reopening is traced in the audit log
-        (RG-14).
+      description: Recomputes the month then freezes it, in the background (a few
+        minutes per 100 agents).
       parameters:
       - in: path
         name: id
@@ -1539,7 +1539,7 @@ paths:
       security:
       - jwtAuth: []
       responses:
-        '200':
+        '202':
           content:
             application/json:
               schema:
