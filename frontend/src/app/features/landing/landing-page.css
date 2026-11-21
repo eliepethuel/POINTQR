@@ -423,8 +423,17 @@ p {
 }
 
 @media (max-width: 860px) {
+  /* Top-aligned, stable boxes: the web-font swap must not move the hero (CLS). */
   .hero {
     grid-template-columns: 1fr;
+    align-content: start;
+  }
+  .eyebrow {
+    line-height: 1.35;
+    min-height: 2.7em;
+  }
+  .ctas .big {
+    flex: 1 1 100%;
   }
   .qr-float {
     width: min(70vw, 340px);
