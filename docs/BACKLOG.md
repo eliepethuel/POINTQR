@@ -14,4 +14,5 @@ Tickets hors du lot courant. Tout `TODO` dans le code doit citer un identifiant 
 | PQR-008 | Base dédiée par grand compte | CDC §9 | V2 |
 | PQR-009 | Interface en anglais | CDC §1 | V2 |
 | PQR-010 | Test d'intrusion tiers | ENF-13 | Lot 5 pilote |
-| PQR-011 | Conteneurisation : Dockerfiles backend/frontend, docker-compose (postgres, redis, S3, mailpit, celery), nginx + en-têtes de sécurité (CSP, HSTS) | ADR-0010 | Phase finale |
+| PQR-011 | ~~Conteneurisation : Dockerfiles, docker-compose, nginx + en-têtes de sécurité~~ — fait (ADR-0014) | ADR-0010 | Phase 6 |
+| PQR-012 | Service S3 (SeaweedFS) dans docker-compose avec création du bucket au démarrage | ADR-0014 | Après V1 |
