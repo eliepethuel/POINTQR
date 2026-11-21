@@ -10,7 +10,7 @@
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{ts,html,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,css,json}\"",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "api:generate": "ng-openapi-gen --config ng-openapi-gen.json && prettier --write --log-level warn src/app/api"
   },
   "private": true,
